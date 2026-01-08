@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英语课室 - You First Idiomas</title>
+    <style>
+        :root {
+            --bg-dark: #0f0112;
+            --panel-bg: #1a011f;
+            --accent-yellow: #fff176; 
+            --mirror: #af8b4a;
+        }
+
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            background: var(--bg-dark); color: white; 
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; overflow: hidden; 
+        }
+
+        .app-container { 
+            display: grid; grid-template-rows: 1fr 220px; 
+            height: 100vh; width: 100vw; 
+        }
+
+        .video-wrapper { position: relative; background: #000; }
+        iframe { width: 100%; height: 100%; border: none; }
+
+        .tools-panel { 
+            background: var(--panel-bg); border-top: 2px solid #333; 
+            display: grid; grid-template-columns: 2fr 1fr; 
+            gap: 15px; padding: 15px; box-sizing: border-box; 
+        }
+
+        .chat-container { 
+            background: rgba(255,255,255,0.03); border-radius: 10px; 
+            display: flex; flex-direction: column; overflow: hidden; 
+            border: 1px solid #333; position: relative; 
+        }
+
+        #freeze-btn {
+            position: absolute; top: 10px; right: 10px; z-index: 10;
+            background: rgba(255,255,255,0.1); border: 1px solid #444;
+            color: #ccc; font-size: 11px; padding: 4px 8px; border-radius: 4px;
+            cursor: pointer; transition: 0.3s;
+        }
+        #freeze-btn.active { 
+            background: var(--accent-yellow); color: #000; border-color: var(--accent-yellow); 
+        }
+
+        #scroll-area { flex-grow: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; }
+        .phrase-row { font-size: 18px; line-height: 1.5; }
+        .local { color: #ffffff; }
+        .remote { color: var(--mirror); border-left: 3px solid var(--mirror); padding-left: 10px; }
+        
+        .word-span { cursor: pointer; padding: 2px; border-radius: 4px; transition: 0.2s; }
+        .word-span:hover { background: rgba(255, 241, 118, 0.2); color: var(--accent-yellow); }
+
+        .dict-container { background: rgba(255,255,255,0.05); border-radius: 10px; padding: 15px; border: 1px solid #333; overflow-y: auto; }
+        .dict-header { 
+            color: var(--accent-yellow); font-weight: bold; font-size: 14px; 
+            margin-bottom: 10px; border-bottom: 1px solid #444; 
+        }
+        #dict-word { font-size: 22px; margin-bottom: 10px; color: var(--accent-yellow); }
+        .meaning { font-size: 13px; color: #ccc; margin-bottom: 8px; }
+        .pos { color: var(--accent-yellow); font-size: 10px; font-weight: bold; margin-right: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="video-wrapper">
+        <iframe src="https://whereby.com/coachlaura7" allow="camera; microphone; fullscreen; speaker; display-capture" allowfullscreen></iframe>
+    </div>
+
+    <div class="tools-panel">
+        <div class="chat-container">
+            <button id="freeze-btn" onclick="toggleFreeze()">锁定文本</button>
+            <div id="scroll-area">
+                <div id="init-msg" style="color: var(--accent-yellow); font-size: 14px;">麦克风已激活。等待语音输入...</div>
+            </div>
+        </div>
+
+        <div class="dict-container">
+            <div class="dict-header">英文翻译 (English Translation)</div>
+            <div id="dict-word">...</div>
+            <div id="dict-results">点击聊天中的字符获取英文释义。</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const DB_URL = "https://chat-tool-d26fd-default-rtdb.firebaseio.com/live_session.json";
+    const myID = "USER_" + Math.random().toString(36).substring(7);
+    let lastTimestamp = 0;
+    let isFrozen = false;
+
+    function toggleFreeze() {
+        isFrozen = !isFrozen;
+        const btn = document.getElementById('freeze-btn');
+        btn.innerText = isFrozen ? "取消锁定" : "锁定文本";
+        btn.className = isFrozen ? "active" : "";
+    }
+
+    async function sync(text, type, extra = null) {
+        if (isFrozen && type === 'phrase') return;
+        const payload = { text, type, sender: myID, timestamp: Date.now(), extra };
+        try {
+            await fetch(DB_URL, { method: 'PATCH', body: JSON.stringify({ "lastEvent": payload }) });
+            render(payload, false);
+        } catch (e) {}
+    }
+
+    setInterval(async () => {
+        try {
+            const res = await fetch(DB_URL);
+            const data = await res.json();
+            if (data?.lastEvent) {
+                const ev = data.lastEvent;
+                if (ev.timestamp > lastTimestamp && ev.sender !== myID) {
+                    lastTimestamp = ev.timestamp;
+                    if (!isFrozen || ev.type !== 'phrase') render(ev, true);
+                }
+            }
+        } catch (e) {}
+    }, 1500);
+
+    function render(data, isRemote) {
+        if (data.type === 'phrase') {
+            const row = document.createElement('div');
+            row.className = `phrase-row ${isRemote ? 'remote' : 'local'}`;
+            // Procesamos caracteres individuales para Chino
+            const parts = data.text.split(""); 
+            parts.forEach(w => {
+                const span = document.createElement('span');
+                span.className = 'word-span';
+                span.innerText = w;
+                span.onclick = () => lookup(w);
+                row.appendChild(span);
+            });
+            const area = document.getElementById('scroll-area');
+            area.appendChild(row);
+            area.scrollTop = area.scrollHeight;
+            const initMsg = document.getElementById('init-msg');
+            if (initMsg) initMsg.style.display = 'none';
+        } else if (data.type === 'analysis') {
+            updateDictUI(data.text, data.extra);
+        }
+    }
+
+    // Nueva lógica de búsqueda: Traducción a Inglés
+    async function lookup(char) {
+        try {
+            // Usamos MyMemory API para una traducción rápida y gratuita de Chino a Inglés
+            const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(char)}&langpair=zh-CN|en`);
+            const data = await res.json();
+            
+            if (data.responseData) {
+                const translation = data.responseData.translatedText;
+                // Sincronizamos como 'analysis' para que aparezca en el panel de ambos usuarios
+                sync(char, 'analysis', [{ pos: 'TRANS', def: translation }]);
+            }
+        } catch (e) {
+            console.error("Translation error:", e);
+        }
+    }
+
+    function updateDictUI(word, entries) {
+        document.getElementById('dict-word').innerText = word;
+        document.getElementById('dict-results').innerHTML = entries.map(e => `
+            <div class="meaning">
+                <span class="pos">English:</span><br>
+                <span style="font-size: 16px; color: #fff;">${e.def}</span>
+            </div>
+        `).join('');
+    }
+
+    function startSpeech() {
+        const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!Speech) return;
+        const rec = new Speech();
+        rec.lang = 'zh-CN';
+        rec.continuous = true;
+        rec.onresult = (e) => {
+            if (!isFrozen) {
+                const text = e.results[e.results.length - 1][0].transcript.trim();
+                sync(text, 'phrase');
+            }
+        };
+        rec.onend = () => rec.start();
+        rec.start();
+    }
+
+    startSpeech();
+</script>
+</body>
+</html>
