@@ -44,26 +44,21 @@
             color: #ccc; font-size: 11px; padding: 4px 8px; border-radius: 4px;
             cursor: pointer; transition: 0.3s;
         }
-        #freeze-btn.active { 
-            background: var(--accent-yellow); color: #000; border-color: var(--accent-yellow); 
-        }
+        #freeze-btn.active { background: var(--accent-yellow); color: #000; border-color: var(--accent-yellow); }
 
         #scroll-area { flex-grow: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; }
-        .phrase-row { font-size: 18px; line-height: 1.5; }
+        .phrase-row { font-size: 22px; line-height: 1.6; letter-spacing: 2px; }
         .local { color: #ffffff; }
         .remote { color: var(--mirror); border-left: 3px solid var(--mirror); padding-left: 10px; }
         
-        .word-span { cursor: pointer; padding: 2px; border-radius: 4px; transition: 0.2s; }
+        .word-span { cursor: pointer; padding: 0 2px; border-radius: 4px; transition: 0.2s; }
         .word-span:hover { background: rgba(255, 241, 118, 0.2); color: var(--accent-yellow); }
 
         .dict-container { background: rgba(255,255,255,0.05); border-radius: 10px; padding: 15px; border: 1px solid #333; overflow-y: auto; }
-        .dict-header { 
-            color: var(--accent-yellow); font-weight: bold; font-size: 14px; 
-            margin-bottom: 10px; border-bottom: 1px solid #444; 
-        }
-        #dict-word { font-size: 22px; margin-bottom: 10px; color: var(--accent-yellow); }
-        .meaning { font-size: 13px; color: #ccc; margin-bottom: 8px; }
-        .pos { color: var(--accent-yellow); font-size: 10px; font-weight: bold; margin-right: 5px; }
+        .dict-header { color: var(--accent-yellow); font-weight: bold; font-size: 12px; text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 5px; }
+        #dict-word { font-size: 28px; margin-bottom: 5px; color: var(--accent-yellow); }
+        .related-box { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .tag { background: rgba(255, 241, 118, 0.15); color: var(--accent-yellow); padding: 4px 10px; border-radius: 15px; font-size: 13px; border: 1px solid rgba(255,241,118,0.3); }
     </style>
 </head>
 <body>
@@ -82,9 +77,9 @@
         </div>
 
         <div class="dict-container">
-            <div class="dict-header">英文翻译 (English Translation)</div>
+            <div class="dict-header">相关词义 (Related Meanings)</div>
             <div id="dict-word">...</div>
-            <div id="dict-results">点击聊天中的字符获取英文释义。</div>
+            <div id="dict-results" class="related-box">点击上方汉字查看关联释义。</div>
         </div>
     </div>
 </div>
@@ -129,50 +124,46 @@
         if (data.type === 'phrase') {
             const row = document.createElement('div');
             row.className = `phrase-row ${isRemote ? 'remote' : 'local'}`;
-            // Procesamos caracteres individuales para Chino
-            const parts = data.text.split(""); 
-            parts.forEach(w => {
+            // Segmentación por caracteres para permitir selección precisa
+            data.text.split("").forEach(char => {
+                if (char.trim() === "") return;
                 const span = document.createElement('span');
                 span.className = 'word-span';
-                span.innerText = w;
-                span.onclick = () => lookup(w);
+                span.innerText = char;
+                span.onclick = () => lookup(char);
                 row.appendChild(span);
             });
             const area = document.getElementById('scroll-area');
             area.appendChild(row);
             area.scrollTop = area.scrollHeight;
-            const initMsg = document.getElementById('init-msg');
-            if (initMsg) initMsg.style.display = 'none';
+            if (document.getElementById('init-msg')) document.getElementById('init-msg').style.display = 'none';
         } else if (data.type === 'analysis') {
             updateDictUI(data.text, data.extra);
         }
     }
 
-    // Nueva lógica de búsqueda: Traducción a Inglés
     async function lookup(char) {
         try {
-            // Usamos MyMemory API para una traducción rápida y gratuita de Chino a Inglés
+            // Utilizamos una consulta de traducción con desglose
             const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(char)}&langpair=zh-CN|en`);
             const data = await res.json();
             
             if (data.responseData) {
-                const translation = data.responseData.translatedText;
-                // Sincronizamos como 'analysis' para que aparezca en el panel de ambos usuarios
-                sync(char, 'analysis', [{ pos: 'TRANS', def: translation }]);
+                let mainText = data.responseData.translatedText;
+                // Limpiamos y separamos por comas o puntos para crear los "Related Meanings"
+                let meanings = mainText.split(/[,.;/]+/).map(s => s.trim().toLowerCase());
+                // Eliminamos duplicados
+                meanings = [...new Set(meanings)];
+                
+                sync(char, 'analysis', meanings);
             }
-        } catch (e) {
-            console.error("Translation error:", e);
-        }
+        } catch (e) {}
     }
 
-    function updateDictUI(word, entries) {
+    function updateDictUI(word, meanings) {
         document.getElementById('dict-word').innerText = word;
-        document.getElementById('dict-results').innerHTML = entries.map(e => `
-            <div class="meaning">
-                <span class="pos">English:</span><br>
-                <span style="font-size: 16px; color: #fff;">${e.def}</span>
-            </div>
-        `).join('');
+        const container = document.getElementById('dict-results');
+        container.innerHTML = meanings.map(m => `<div class="tag">${m}</div>`).join('');
     }
 
     function startSpeech() {
