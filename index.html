@@ -3,85 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>英语课室 - 实时翻译版</title>
+    <title>Mirroring Room - Chinese Fast</title>
     <style>
         :root {
             --bg-dark: #0f0112;
             --panel-bg: #1a011f;
             --accent-yellow: #fff176; 
-            --mirror: #af8b4a;
+            --mirror-gold: #af8b4a;
         }
 
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
             background: var(--bg-dark); color: white; 
-            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; overflow: hidden; 
+            font-family: 'PingFang SC', sans-serif; overflow: hidden; 
         }
 
-        .app-container { 
-            display: grid; grid-template-rows: 1fr 220px; 
-            height: 100vh; width: 100vw; 
-        }
+        .app-container { display: grid; grid-template-rows: 1fr 220px; height: 100vh; }
 
         .video-wrapper { position: relative; background: #000; }
         iframe { width: 100%; height: 100%; border: none; }
 
         .tools-panel { 
             background: var(--panel-bg); border-top: 2px solid #333; 
-            display: grid; grid-template-columns: 2fr 1fr; 
-            gap: 15px; padding: 15px; box-sizing: border-box; 
+            display: grid; grid-template-columns: 2fr 1fr; gap: 10px; padding: 15px; 
         }
 
         .chat-container { 
             background: rgba(255,255,255,0.03); border-radius: 10px; 
-            display: flex; flex-direction: column; overflow: hidden; 
-            border: 1px solid #333; position: relative; 
+            display: flex; flex-direction: column; overflow-y: auto; border: 1px solid #333;
+            padding: 10px;
         }
 
-        #scroll-area { 
-            flex-grow: 1; overflow-y: auto; padding: 15px; 
-            display: flex; flex-direction: column; gap: 12px; 
-        }
+        .phrase-row { font-size: 24px; margin-bottom: 10px; line-height: 1.4; }
+        .local { color: #ffffff; } /* Tus palabras */
+        .remote { color: var(--mirror-gold); border-left: 3px solid var(--mirror-gold); padding-left: 10px; } /* Palabras del otro */
 
-        /* Estilo de la frase: ahora es una caja clicable completa */
-        .phrase-row { 
-            font-size: 20px; line-height: 1.4; padding: 8px;
-            border-radius: 8px; cursor: pointer; transition: 0.2s;
-            border: 1px solid transparent;
-        }
-        .phrase-row:hover { background: rgba(255,241,118,0.1); border-color: var(--accent-yellow); }
-        
-        .local { color: #ffffff; }
-        .remote { color: var(--mirror); border-left: 3px solid var(--mirror); }
+        .word-span { cursor: pointer; padding: 0 2px; border-radius: 4px; }
+        .word-span:hover { background: var(--accent-yellow); color: #000; }
 
-        /* Panel de Traducción */
-        .dict-container { background: rgba(255,255,255,0.05); border-radius: 10px; padding: 15px; border: 1px solid #333; overflow-y: auto; }
-        .dict-header { color: var(--accent-yellow); font-weight: bold; font-size: 12px; margin-bottom: 10px; border-bottom: 1px solid #444; }
-        #dict-word { font-size: 14px; color: #888; margin-bottom: 10px; font-style: italic; }
-        #dict-results { font-size: 18px; color: #fff; line-height: 1.5; }
-
-        /* Indicador de "Escribiendo..." */
-        .interim { color: #555; font-style: italic; }
+        .dict-container { background: rgba(255,255,255,0.05); border-radius: 10px; padding: 15px; border: 1px solid #444; }
+        .dict-header { color: var(--accent-yellow); font-size: 12px; font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #444; }
+        #dict-word { font-size: 40px; color: #fff; margin-bottom: 5px; }
+        #dict-results { font-size: 18px; color: var(--accent-yellow); }
     </style>
 </head>
 <body>
 
 <div class="app-container">
     <div class="video-wrapper">
-        <iframe src="https://whereby.com/coachlaura7" allow="camera; microphone; fullscreen; speaker; display-capture" allowfullscreen></iframe>
+        <iframe src="https://whereby.com/coachlaura7" allow="camera; microphone; fullscreen; speaker; display-capture"></iframe>
     </div>
 
     <div class="tools-panel">
-        <div class="chat-container">
-            <div id="scroll-area">
-                <div id="interim-display" class="interim"></div>
+        <div class="chat-container" id="scroll-area">
             </div>
-        </div>
 
         <div class="dict-container">
-            <div class="dict-header">翻译 / TRANSLATION</div>
-            <div id="dict-word">点击句子进行翻译</div>
-            <div id="dict-results">Waiting for selection...</div>
+            <div class="dict-header">MIRROR DICTIONARY</div>
+            <div id="dict-word">-</div>
+            <div id="dict-results">Select a character</div>
         </div>
     </div>
 </div>
@@ -91,62 +71,74 @@
     const myID = "USER_" + Math.random().toString(36).substring(7);
     let lastTimestamp = 0;
 
-    // 1. Sincronización optimizada
-    async function sync(text, type, extra = null) {
+    // --- 1. SINCRONIZACIÓN (MIRRORING) ---
+    async function sendToFirebase(text, type, extra = null) {
         const payload = { text, type, sender: myID, timestamp: Date.now(), extra };
         try {
             await fetch(DB_URL, { method: 'PATCH', body: JSON.stringify({ "lastEvent": payload }) });
-            render(payload, false);
-        } catch (e) {}
+        } catch (e) { console.error("Firebase Sync Error"); }
     }
 
+    // Escuchar cambios de Firebase (Mirroring)
     setInterval(async () => {
         try {
             const res = await fetch(DB_URL);
             const data = await res.json();
-            if (data?.lastEvent && data.lastEvent.timestamp > lastTimestamp && data.lastEvent.sender !== myID) {
-                lastTimestamp = data.lastEvent.timestamp;
-                render(data.lastEvent, true);
+            if (data?.lastEvent && data.lastEvent.timestamp > lastTimestamp) {
+                const ev = data.lastEvent;
+                lastTimestamp = ev.timestamp;
+                
+                if (ev.sender !== myID) {
+                    // Si el evento es de la otra persona, renderizar en pantalla
+                    if (ev.type === 'phrase') renderPhrase(ev.text, 'remote');
+                    if (ev.type === 'analysis') updateUI(ev.text, ev.extra);
+                }
             }
         } catch (e) {}
-    }, 1000);
+    }, 800);
 
-    // 2. Renderizado de frases completas
-    function render(data, isRemote) {
-        if (data.type === 'phrase') {
-            const row = document.createElement('div');
-            row.className = `phrase-row ${isRemote ? 'remote' : 'local'}`;
-            row.innerText = data.text;
-            row.onclick = () => translate(data.text);
-            
-            const area = document.getElementById('scroll-area');
-            const interim = document.getElementById('interim-display');
-            area.insertBefore(row, interim);
-            area.scrollTop = area.scrollHeight;
-        } else if (data.type === 'analysis') {
-            updateDictUI(data.text, data.extra);
-        }
+    // --- 2. RENDERIZADO ---
+    function renderPhrase(text, mode) {
+        const area = document.getElementById('scroll-area');
+        const row = document.createElement('div');
+        row.className = `phrase-row ${mode}`;
+        
+        text.split("").forEach(char => {
+            const span = document.createElement('span');
+            span.className = 'word-span';
+            span.innerText = char;
+            span.onclick = () => handleIdentify(char);
+            row.appendChild(span);
+        });
+        
+        area.appendChild(row);
+        area.scrollTop = area.scrollHeight;
     }
 
-    // 3. Traducción veloz (Frase completa)
-    async function translate(text) {
-        document.getElementById('dict-word').innerText = "Translating: " + text;
+    // --- 3. TRADUCCIÓN Y ANÁLISIS ---
+    async function handleIdentify(char) {
+        // Mostrar localmente de inmediato
+        updateUI(char, "Searching...");
+        
         try {
-            const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=zh-CN|en`);
+            const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(char)}&langpair=zh-CN|en`);
             const data = await res.json();
-            const result = data.responseData.translatedText;
-            sync(text, 'analysis', result);
+            const meaning = data.responseData.translatedText.toLowerCase();
+            
+            // Actualizar mi pantalla y enviar a Firebase para el mirroring
+            updateUI(char, meaning);
+            sendToFirebase(char, 'analysis', meaning);
         } catch (e) {
-            document.getElementById('dict-results').innerText = "Error in translation.";
+            updateUI(char, "Error");
         }
     }
 
-    function updateDictUI(original, translated) {
-        document.getElementById('dict-word').innerText = original;
-        document.getElementById('dict-results').innerText = translated;
+    function updateUI(word, result) {
+        document.getElementById('dict-word').innerText = word;
+        document.getElementById('dict-results').innerText = result;
     }
 
-    // 4. Voice-to-Text Instantáneo (Simplificado)
+    // --- 4. VOZ A TEXTO (ULTRA RÁPIDO) ---
     function startSpeech() {
         const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!Speech) return;
@@ -154,18 +146,16 @@
         const rec = new Speech();
         rec.lang = 'zh-CN';
         rec.continuous = true;
-        rec.interimResults = true; // Esto permite ver el texto mientras hablas
+        rec.interimResults = false; // Cambiado a false para evitar spam de Firebase, pero procesado rápido
 
         rec.onresult = (e) => {
-            let interimTranscript = '';
-            for (let i = e.resultIndex; i < e.results.length; ++i) {
-                if (e.results[i].isFinal) {
-                    sync(e.results[i][0].transcript.trim(), 'phrase');
-                } else {
-                    interimTranscript += e.results[i][0].transcript;
-                }
+            const transcript = e.results[e.results.length - 1][0].transcript.trim();
+            if (transcript) {
+                // 1. Mostrar en mi pantalla inmediatamente
+                renderPhrase(transcript, 'local');
+                // 2. Enviar a Firebase para el mirroring
+                sendToFirebase(transcript, 'phrase');
             }
-            document.getElementById('interim-display').innerText = interimTranscript;
         };
 
         rec.onend = () => rec.start();
