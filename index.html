@@ -1,178 +1,208 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>英语课室 - 实时翻译版</title>
-    <style>
-        :root {
-            --bg-dark: #0f0112;
-            --panel-bg: #1a011f;
-            --accent-yellow: #fff176; 
-            --mirror: #af8b4a;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Whereby Mandarin Captions</title>
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --text-color: #f8fafc;
+      --accent-color: #3b82f6;
+      --accent-active: #ef4444;
+      --border-color: #334155;
+    }
 
-        body, html { 
-            margin: 0; padding: 0; width: 100%; height: 100%; 
-            background: var(--bg-dark); color: white; 
-            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; overflow: hidden; 
-        }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-        .app-container { 
-            display: grid; grid-template-rows: 1fr 220px; 
-            height: 100vh; width: 100vw; 
-        }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      padding: 20px;
+    }
 
-        .video-wrapper { position: relative; background: #000; }
-        iframe { width: 100%; height: 100%; border: none; }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--border-color);
+    }
 
-        .tools-panel { 
-            background: var(--panel-bg); border-top: 2px solid #333; 
-            display: grid; grid-template-columns: 2fr 1fr; 
-            gap: 15px; padding: 15px; box-sizing: border-box; 
-        }
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
 
-        .chat-container { 
-            background: rgba(255,255,255,0.03); border-radius: 10px; 
-            display: flex; flex-direction: column; overflow: hidden; 
-            border: 1px solid #333; position: relative; 
-        }
+    button {
+      padding: 10px 20px;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background-color: var(--accent-color);
+      color: white;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+    }
 
-        #scroll-area { 
-            flex-grow: 1; overflow-y: auto; padding: 15px; 
-            display: flex; flex-direction: column; gap: 12px; 
-        }
+    button:active {
+      transform: scale(0.98);
+    }
 
-        /* Estilo de la frase: ahora es una caja clicable completa */
-        .phrase-row { 
-            font-size: 20px; line-height: 1.4; padding: 8px;
-            border-radius: 8px; cursor: pointer; transition: 0.2s;
-            border: 1px solid transparent;
-        }
-        .phrase-row:hover { background: rgba(255,241,118,0.1); border-color: var(--accent-yellow); }
-        
-        .local { color: #ffffff; }
-        .remote { color: var(--mirror); border-left: 3px solid var(--mirror); }
+    button.recording {
+      background-color: var(--accent-active);
+    }
 
-        /* Panel de Traducción */
-        .dict-container { background: rgba(255,255,255,0.05); border-radius: 10px; padding: 15px; border: 1px solid #333; overflow-y: auto; }
-        .dict-header { color: var(--accent-yellow); font-weight: bold; font-size: 12px; margin-bottom: 10px; border-bottom: 1px solid #444; }
-        #dict-word { font-size: 14px; color: #888; margin-bottom: 10px; font-style: italic; }
-        #dict-results { font-size: 18px; color: #fff; line-height: 1.5; }
+    .shortcut-hint {
+      font-size: 0.85rem;
+      color: #94a3b8;
+    }
 
-        /* Indicador de "Escribiendo..." */
-        .interim { color: #555; font-style: italic; }
-    </style>
+    kbd {
+      background-color: #334155;
+      padding: 3px 6px;
+      border-radius: 4px;
+      border: 1px solid #475569;
+      font-family: monospace;
+      color: #fff;
+    }
+
+    main {
+      flex: 1;
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      padding: 30px;
+      overflow-y: auto;
+      font-size: 2.5rem;
+      line-height: 1.8;
+      letter-spacing: 1px;
+    }
+
+    .interim {
+      color: #64748b;
+    }
+
+    .status-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: #64748b;
+      display: inline-block;
+      margin-right: 8px;
+    }
+
+    .status-dot.active {
+      background-color: #22c55e;
+      box-shadow: 0 0 10px #22c55e;
+    }
+  </style>
 </head>
 <body>
 
-<div class="app-container">
-    <div class="video-wrapper">
-        <iframe src="https://whereby.com/coachlaura7" allow="camera; microphone; fullscreen; speaker; display-capture" allowfullscreen></iframe>
+  <header>
+    <div style="display: flex; align-items: center;">
+      <span id="statusDot" class="status-dot"></span>
+      <h1 style="font-size: 1.25rem; font-weight: 500;">Whereby Hanzi Captions (yfiworkshop)</h1>
     </div>
-
-    <div class="tools-panel">
-        <div class="chat-container">
-            <div id="scroll-area">
-                <div id="interim-display" class="interim"></div>
-            </div>
-        </div>
-
-        <div class="dict-container">
-            <div class="dict-header">翻译 / TRANSLATION</div>
-            <div id="dict-word">点击句子进行翻译</div>
-            <div id="dict-results">Waiting for selection...</div>
-        </div>
+    <div class="controls">
+      <button id="toggleBtn">Iniciar [Espacio]</button>
+      <span class="shortcut-hint">Atajo: <kbd>Espacio</kbd></span>
     </div>
-</div>
+  </header>
 
-<script>
-    const DB_URL = "https://chat-tool-d26fd-default-rtdb.firebaseio.com/live_session.json";
-    const myID = "USER_" + Math.random().toString(36).substring(7);
-    let lastTimestamp = 0;
+  <main id="captionContainer">
+    <span id="finalTranscript"></span>
+    <span id="interimTranscript" class="interim"></span>
+  </main>
 
-    // 1. Sincronización optimizada
-    async function sync(text, type, extra = null) {
-        const payload = { text, type, sender: myID, timestamp: Date.now(), extra };
-        try {
-            await fetch(DB_URL, { method: 'PATCH', body: JSON.stringify({ "lastEvent": payload }) });
-            render(payload, false);
-        } catch (e) {}
-    }
+  <script>
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-    setInterval(async () => {
-        try {
-            const res = await fetch(DB_URL);
-            const data = await res.json();
-            if (data?.lastEvent && data.lastEvent.timestamp > lastTimestamp && data.lastEvent.sender !== myID) {
-                lastTimestamp = data.lastEvent.timestamp;
-                render(data.lastEvent, true);
-            }
-        } catch (e) {}
-    }, 1000);
+    if (!SpeechRecognition) {
+      alert("Tu navegador no soporta Web Speech API. Usa Google Chrome o Microsoft Edge.");
+    } else {
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'zh-CN';
+      recognition.continuous = true;
+      recognition.interimResults = true;
 
-    // 2. Renderizado de frases completas
-    function render(data, isRemote) {
-        if (data.type === 'phrase') {
-            const row = document.createElement('div');
-            row.className = `phrase-row ${isRemote ? 'remote' : 'local'}`;
-            row.innerText = data.text;
-            row.onclick = () => translate(data.text);
-            
-            const area = document.getElementById('scroll-area');
-            const interim = document.getElementById('interim-display');
-            area.insertBefore(row, interim);
-            area.scrollTop = area.scrollHeight;
-        } else if (data.type === 'analysis') {
-            updateDictUI(data.text, data.extra);
+      let isListening = false;
+
+      const toggleBtn = document.getElementById('toggleBtn');
+      const statusDot = document.getElementById('statusDot');
+      const finalTranscript = document.getElementById('finalTranscript');
+      const interimTranscript = document.getElementById('interimTranscript');
+      const captionContainer = document.getElementById('captionContainer');
+
+      function toggleListening() {
+        if (isListening) {
+          recognition.stop();
+        } else {
+          try {
+            recognition.start();
+          } catch (err) {
+            console.error(err);
+          }
         }
-    }
+      }
 
-    // 3. Traducción veloz (Frase completa)
-    async function translate(text) {
-        document.getElementById('dict-word').innerText = "Translating: " + text;
-        try {
-            const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=zh-CN|en`);
-            const data = await res.json();
-            const result = data.responseData.translatedText;
-            sync(text, 'analysis', result);
-        } catch (e) {
-            document.getElementById('dict-results').innerText = "Error in translation.";
+      recognition.onstart = () => {
+        isListening = true;
+        toggleBtn.textContent = 'Detener [Espacio]';
+        toggleBtn.classList.add('recording');
+        statusDot.classList.add('active');
+      };
+
+      recognition.onend = () => {
+        isListening = false;
+        toggleBtn.textContent = 'Iniciar [Espacio]';
+        toggleBtn.classList.remove('recording');
+        statusDot.classList.remove('active');
+      };
+
+      recognition.onresult = (event) => {
+        let interimText = '';
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript.innerHTML += event.results[i][0].transcript + ' ';
+          } else {
+            interimText += event.results[i][0].transcript;
+          }
         }
+
+        interimTranscript.innerHTML = interimText;
+        captionContainer.scrollTop = captionContainer.scrollHeight;
+      };
+
+      recognition.onerror = (event) => {
+        console.error("Error de reconocimiento:", event.error);
+      };
+
+      toggleBtn.addEventListener('click', toggleListening);
+
+      // Atajo con la barra espaciadora
+      document.addEventListener('keydown', (e) => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        if (e.code === 'Space') {
+          e.preventDefault();
+          toggleListening();
+        }
+      });
     }
-
-    function updateDictUI(original, translated) {
-        document.getElementById('dict-word').innerText = original;
-        document.getElementById('dict-results').innerText = translated;
-    }
-
-    // 4. Voice-to-Text Instantáneo (Simplificado)
-    function startSpeech() {
-        const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!Speech) return;
-        
-        const rec = new Speech();
-        rec.lang = 'zh-CN';
-        rec.continuous = true;
-        rec.interimResults = true; // Esto permite ver el texto mientras hablas
-
-        rec.onresult = (e) => {
-            let interimTranscript = '';
-            for (let i = e.resultIndex; i < e.results.length; ++i) {
-                if (e.results[i].isFinal) {
-                    sync(e.results[i][0].transcript.trim(), 'phrase');
-                } else {
-                    interimTranscript += e.results[i][0].transcript;
-                }
-            }
-            document.getElementById('interim-display').innerText = interimTranscript;
-        };
-
-        rec.onend = () => rec.start();
-        rec.start();
-    }
-
-    startSpeech();
-</script>
+  </script>
 </body>
 </html>
