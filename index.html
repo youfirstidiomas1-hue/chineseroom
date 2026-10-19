@@ -1,208 +1,236 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Whereby Mandarin Captions</title>
-  <style>
-    :root {
-      --bg-color: #0f172a;
-      --card-bg: #1e293b;
-      --text-color: #f8fafc;
-      --accent-color: #3b82f6;
-      --accent-active: #ef4444;
-      --border-color: #334155;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mandarin Room - You First Idiomas</title>
+    <style>
+        :root {
+            --bg-dark: #0f0112;
+            --panel-bg: #1a011f;
+            --accent-yellow: #fff176; /* Amarillo claro */
+            --mirror: #af8b4a;
+        }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            background: var(--bg-dark); color: white; 
+            font-family: 'Segoe UI', Tahoma, "PingFang SC", "Microsoft YaHei", sans-serif; overflow: hidden; 
+        }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      padding: 20px;
-    }
+        .app-container { 
+            display: grid; grid-template-rows: 1fr 220px; 
+            height: 100vh; width: 100vw; 
+        }
 
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      padding-bottom: 15px;
-      border-bottom: 1px solid var(--border-color);
-    }
+        /* Área de Video */
+        .video-wrapper { position: relative; background: #000; }
+        iframe { width: 100%; height: 100%; border: none; }
 
-    .controls {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
+        /* Panel de Herramientas */
+        .tools-panel { 
+            background: var(--panel-bg); border-top: 2px solid #333; 
+            display: grid; grid-template-columns: 2fr 1fr; 
+            gap: 15px; padding: 15px; box-sizing: border-box; 
+        }
 
-    button {
-      padding: 10px 20px;
-      font-size: 1rem;
-      font-weight: 600;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      background-color: var(--accent-color);
-      color: white;
-      transition: background-color 0.2s ease, transform 0.1s ease;
-    }
+        .chat-container { 
+            background: rgba(255,255,255,0.03); border-radius: 10px; 
+            display: flex; flex-direction: column; overflow: hidden; 
+            border: 1px solid #333; position: relative; 
+        }
 
-    button:active {
-      transform: scale(0.98);
-    }
+        /* Botón Freeze Discreto */
+        #freeze-btn {
+            position: absolute; top: 10px; right: 10px; z-index: 10;
+            background: rgba(255,255,255,0.1); border: 1px solid #444;
+            color: #ccc; font-size: 10px; padding: 4px 8px; border-radius: 4px;
+            cursor: pointer; text-transform: uppercase; transition: 0.3s;
+        }
+        #freeze-btn.active { 
+            background: var(--accent-yellow); color: #000; border-color: var(--accent-yellow); 
+        }
 
-    button.recording {
-      background-color: var(--accent-active);
-    }
+        #scroll-area { flex-grow: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; }
+        .phrase-row { font-size: 24px; line-height: 1.4; letter-spacing: 1px; }
+        .local { color: #ffffff; }
+        .remote { color: var(--mirror); border-left: 3px solid var(--mirror); padding-left: 10px; }
+        
+        /* En Chino permitimos hacer clic por cada caracter Hanzi */
+        .word-span { cursor: pointer; padding: 2px 1px; border-radius: 4px; transition: 0.2s; }
+        .word-span:hover { background: rgba(255, 241, 118, 0.2); color: var(--accent-yellow); }
 
-    .shortcut-hint {
-      font-size: 0.85rem;
-      color: #94a3b8;
-    }
-
-    kbd {
-      background-color: #334155;
-      padding: 3px 6px;
-      border-radius: 4px;
-      border: 1px solid #475569;
-      font-family: monospace;
-      color: #fff;
-    }
-
-    main {
-      flex: 1;
-      background-color: var(--card-bg);
-      border-radius: 12px;
-      border: 1px solid var(--border-color);
-      padding: 30px;
-      overflow-y: auto;
-      font-size: 2.5rem;
-      line-height: 1.8;
-      letter-spacing: 1px;
-    }
-
-    .interim {
-      color: #64748b;
-    }
-
-    .status-dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background-color: #64748b;
-      display: inline-block;
-      margin-right: 8px;
-    }
-
-    .status-dot.active {
-      background-color: #22c55e;
-      box-shadow: 0 0 10px #22c55e;
-    }
-  </style>
+        /* Diccionario Adaptado a Mandarín */
+        .dict-container { background: rgba(255,255,255,0.05); border-radius: 10px; padding: 15px; border: 1px solid #333; overflow-y: auto; }
+        .dict-header { 
+            color: var(--accent-yellow); font-weight: bold; font-size: 14px; 
+            text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid #444; 
+        }
+        #dict-word { font-size: 28px; margin-bottom: 8px; color: var(--accent-yellow); }
+        .meaning { font-size: 14px; color: #ccc; margin-bottom: 8px; line-height: 1.3; }
+        .pos { color: var(--accent-yellow); font-size: 11px; font-weight: bold; }
+    </style>
 </head>
 <body>
 
-  <header>
-    <div style="display: flex; align-items: center;">
-      <span id="statusDot" class="status-dot"></span>
-      <h1 style="font-size: 1.25rem; font-weight: 500;">Whereby Hanzi Captions (yfiworkshop)</h1>
+<div class="app-container">
+    <div class="video-wrapper">
+        <iframe src="https://whereby.com/yfiworkshop" allow="camera; microphone; fullscreen; speaker; display-capture" allowfullscreen></iframe>
     </div>
-    <div class="controls">
-      <button id="toggleBtn">Iniciar [Espacio]</button>
-      <span class="shortcut-hint">Atajo: <kbd>Espacio</kbd></span>
+
+    <div class="tools-panel">
+        <div class="chat-container">
+            <button id="freeze-btn" onclick="toggleFreeze()">Freeze Text</button>
+            <div id="scroll-area">
+                <div id="init-msg" style="color: var(--accent-yellow); font-size: 14px;">麦克风已激活。等待中文语音... (Micrófono activo. Esperando voz en mandarín...)</div>
+            </div>
+        </div>
+
+        <div class="dict-container">
+            <div class="dict-header">Smart Dictionary (Hanzi)</div>
+            <div id="dict-word">...</div>
+            <div id="dict-results">点击聊天中的汉字查看释义。<br>(Haz clic en los caracteres del chat para ver definiciones).</div>
+        </div>
     </div>
-  </header>
+</div>
 
-  <main id="captionContainer">
-    <span id="finalTranscript"></span>
-    <span id="interimTranscript" class="interim"></span>
-  </main>
+<script>
+    // Usamos otra rama o base de datos en Firebase para mandarín para no cruzar datos con inglés
+    const DB_URL = "https://chat-tool-d26fd-default-rtdb.firebaseio.com/live_session_mandarin.json";
+    const myID = "USER_ZH_" + Math.random().toString(36).substring(7);
+    let lastTimestamp = 0;
+    let isFrozen = false;
 
-  <script>
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-    if (!SpeechRecognition) {
-      alert("Tu navegador no soporta Web Speech API. Usa Google Chrome o Microsoft Edge.");
-    } else {
-      const recognition = new SpeechRecognition();
-      recognition.lang = 'zh-CN';
-      recognition.continuous = true;
-      recognition.interimResults = true;
-
-      let isListening = false;
-
-      const toggleBtn = document.getElementById('toggleBtn');
-      const statusDot = document.getElementById('statusDot');
-      const finalTranscript = document.getElementById('finalTranscript');
-      const interimTranscript = document.getElementById('interimTranscript');
-      const captionContainer = document.getElementById('captionContainer');
-
-      function toggleListening() {
-        if (isListening) {
-          recognition.stop();
-        } else {
-          try {
-            recognition.start();
-          } catch (err) {
-            console.error(err);
-          }
-        }
-      }
-
-      recognition.onstart = () => {
-        isListening = true;
-        toggleBtn.textContent = 'Detener [Espacio]';
-        toggleBtn.classList.add('recording');
-        statusDot.classList.add('active');
-      };
-
-      recognition.onend = () => {
-        isListening = false;
-        toggleBtn.textContent = 'Iniciar [Espacio]';
-        toggleBtn.classList.remove('recording');
-        statusDot.classList.remove('active');
-      };
-
-      recognition.onresult = (event) => {
-        let interimText = '';
-
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            finalTranscript.innerHTML += event.results[i][0].transcript + ' ';
-          } else {
-            interimText += event.results[i][0].transcript;
-          }
-        }
-
-        interimTranscript.innerHTML = interimText;
-        captionContainer.scrollTop = captionContainer.scrollHeight;
-      };
-
-      recognition.onerror = (event) => {
-        console.error("Error de reconocimiento:", event.error);
-      };
-
-      toggleBtn.addEventListener('click', toggleListening);
-
-      // Atajo con la barra espaciadora
-      document.addEventListener('keydown', (e) => {
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-        if (e.code === 'Space') {
-          e.preventDefault();
-          toggleListening();
-        }
-      });
+    function toggleFreeze() {
+        isFrozen = !isFrozen;
+        const btn = document.getElementById('freeze-btn');
+        btn.innerText = isFrozen ? "Unfreeze" : "Freeze Text";
+        btn.className = isFrozen ? "active" : "";
     }
-  </script>
+
+    async function sync(text, type, extra = null) {
+        if (isFrozen && type === 'phrase') return;
+        const payload = { text, type, sender: myID, timestamp: Date.now(), extra };
+        try {
+            await fetch(DB_URL, { method: 'PATCH', body: JSON.stringify({ "lastEvent": payload }) });
+            render(payload, false);
+        } catch (e) {}
+    }
+
+    setInterval(async () => {
+        try {
+            const res = await fetch(DB_URL);
+            const data = await res.json();
+            if (data?.lastEvent) {
+                const ev = data.lastEvent;
+                if (ev.timestamp > lastTimestamp && ev.sender !== myID) {
+                    lastTimestamp = ev.timestamp;
+                    if (!isFrozen || ev.type !== 'phrase') render(ev, true);
+                }
+            }
+        } catch (e) {}
+    }, 1500);
+
+    function render(data, isRemote) {
+        if (data.type === 'phrase') {
+            const row = document.createElement('div');
+            row.className = `phrase-row ${isRemote ? 'remote' : 'local'}`;
+            
+            // En Chino Mandarín dividimos carácter por carácter (o letra) para permitir la selección precisa del Hanzi
+            Array.from(data.text).forEach(char => {
+                const span = document.createElement('span');
+                span.className = 'word-span';
+                span.innerText = char;
+                span.onclick = () => lookup(char);
+                row.appendChild(span);
+            });
+
+            const area = document.getElementById('scroll-area');
+            area.appendChild(row);
+            area.scrollTop = area.scrollHeight;
+            const initMsg = document.getElementById('init-msg');
+            if (initMsg) initMsg.style.display = 'none';
+        } else if (data.type === 'analysis') {
+            updateDictUI(data.text, data.extra);
+        }
+    }
+
+    // Diccionario de Consulta abierto para Chino (usando open-api gratuita o fallback a definición estructurada)
+    async function lookup(char) {
+        // Ignorar espacios o puntuación común
+        if (!char.trim() || /[\s\.,，。！？?]/g.test(char)) return;
+        
+        try {
+            // Consultamos una API pública de diccionario de chino (Hanzi API / CC-CEDICT mirror) o mostramos detalles
+            const res = await fetch(`https://kaikki.org/dictionary/Chinese/meaning/${encodeURIComponent(char)}.json`);
+            // Si la API responde con formato de Wikcionario estructurado:
+            if (res.ok) {
+                const textData = await res.text();
+                // Procesar línea por línea si viene en formato JSON lines
+                const lines = textData.trim().split('\n');
+                let definitions = [];
+                for (let line of lines) {
+                    const obj = JSON.parse(line);
+                    if (obj.glosses) {
+                        definitions.push({ pos: obj.pos || 'character', def: obj.glosses.join(', ') });
+                    }
+                }
+                if (definitions.length > 0) {
+                    sync(char, 'analysis', definitions.slice(0, 3));
+                    return;
+                }
+            }
+            throw new Error("Fallback");
+        } catch (e) {
+            // Fallback visual informativo si la red o API falla puntualmente
+            sync(char, 'analysis', [{ pos: 'Hanzi', def: `Caracter seleccionado: ${char}. (Verifica conexión o utiliza diccionario de apoyo).` }]);
+        }
+    }
+
+    function updateDictUI(word, entries) {
+        document.getElementById('dict-word').innerText = word;
+        document.getElementById('dict-results').innerHTML = entries.map(e => `
+            <div class="meaning"><span class="pos">${e.pos}</span><br>${e.def}</div>
+        `).join('');
+    }
+
+    function startSpeech() {
+        const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!Speech) {
+            alert("Tu navegador no soporta reconocimiento de voz. Usa Google Chrome.");
+            return;
+        }
+        const rec = new Speech();
+        // Configurado estrictamente para Chino Mandarín (China)
+        rec.lang = 'zh-CN';
+        rec.continuous = true;
+        rec.interimResults = false; // Tomamos resultados finales limpios para sincronizar al chat
+
+        rec.onresult = (e) => {
+            if (!isFrozen) {
+                const text = e.results[e.results.length - 1][0].transcript.trim();
+                sync(text, 'phrase');
+            }
+        };
+        rec.onerror = (event) => {
+            console.error("Error de reconocimiento de voz:", event.error);
+        };
+        rec.onend = () => {
+            // Reconexión automática si el navegador corta la sesión de escucha
+            try { rec.start(); } catch(err) {}
+        };
+        
+        try {
+            rec.start();
+        } catch(err) {
+            console.error("No se pudo iniciar el reconocimiento automáticamente:", err);
+        }
+    }
+
+    // Iniciar al cargar la página
+    window.addEventListener('load', () => {
+        startSpeech();
+    });
+</script>
 </body>
 </html>
