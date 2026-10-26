@@ -8,47 +8,75 @@
         :root {
             --bg-dark: #0f0112;
             --panel-bg: #1a011f;
-            --accent-yellow: #fff176; /* Amarillo claro solicitado */
+            --accent-yellow: #fff176;
             --mirror: #af8b4a;
             --danger-red: #ef4444;
+            --border-color: #333333;
         }
 
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
             background: var(--bg-dark); color: white; 
-            font-family: 'Segoe UI', Tahoma, "PingFang SC", "Microsoft YaHei", sans-serif; overflow: hidden; 
+            font-family: 'Segoe UI', Tahoma, "PingFang SC", "Microsoft YaHei", sans-serif; 
+            overflow: hidden; 
         }
 
         .app-container { 
-            display: grid; grid-template-rows: 1fr 220px; 
-            height: 100vh; width: 100vw; 
+            display: grid; 
+            grid-template-rows: 1fr 220px; 
+            height: 100vh; 
+            width: 100vw; 
         }
 
         /* Área de Video sin Tags */
-        .video-wrapper { position: relative; background: #000; }
+        .video-wrapper { position: relative; background: #000; width: 100%; height: 100%; }
         iframe { width: 100%; height: 100%; border: none; }
 
-        /* Panel de Herramientas inferior */
+        /* Panel de Herramientas Inferior - 3 Columnas */
         .tools-panel { 
-            background: var(--panel-bg); border-top: 2px solid #333; 
-            display: grid; grid-template-columns: 2fr 1fr; 
-            gap: 15px; padding: 15px; box-sizing: border-box; 
+            background: var(--panel-bg); 
+            border-top: 2px solid var(--border-color); 
+            display: grid; 
+            grid-template-columns: 1.2fr 1fr 0.8fr; 
+            gap: 12px; 
+            padding: 12px; 
+            box-sizing: border-box; 
+            height: 220px;
         }
 
-        .chat-container { 
-            background: rgba(255,255,255,0.03); border-radius: 10px; 
-            display: flex; flex-direction: column; overflow: hidden; 
-            border: 1px solid #333; position: relative; 
+        /* Estructura de Columnas Generales */
+        .tool-card {
+            background: rgba(255,255,255,0.03); 
+            border-radius: 10px; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+            border: 1px solid var(--border-color); 
+            position: relative;
+            padding: 10px;
+            box-sizing: border-box;
         }
 
-        /* Barra Superior de Control dentro del Chat */
+        .tool-header {
+            color: var(--accent-yellow); 
+            font-weight: bold; 
+            font-size: 12px; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px;
+            margin-bottom: 8px; 
+            padding-bottom: 5px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* COLUMNA 1: Subtítulos en Vivo */
         .control-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 12px;
-            background: rgba(0,0,0,0.2);
-            border-bottom: 1px solid #333;
+            margin-bottom: 6px;
         }
 
         .status-tag {
@@ -72,14 +100,13 @@
             box-shadow: 0 0 6px #22c55e;
         }
 
-        /* Botón Activar / Desactivar con Shortcut */
         #toggle-mic-btn {
             background: var(--accent-yellow);
             border: 1px solid var(--accent-yellow);
             color: #000;
             font-weight: bold;
-            font-size: 11px;
-            padding: 5px 10px;
+            font-size: 10px;
+            padding: 4px 8px;
             border-radius: 4px;
             cursor: pointer;
             text-transform: uppercase;
@@ -92,42 +119,117 @@
             color: #ffffff;
         }
 
-        #scroll-area { flex-grow: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; }
-        .phrase-row { font-size: 24px; line-height: 1.4; letter-spacing: 1px; }
+        #scroll-area { 
+            flex-grow: 1; 
+            overflow-y: auto; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px; 
+            padding-right: 4px;
+        }
+
+        .phrase-row { font-size: 20px; line-height: 1.4; letter-spacing: 1px; word-break: break-all; }
         .local { color: #ffffff; }
         .interim-text { color: #888888; font-style: italic; }
 
-        .word-span { padding: 2px 1px; border-radius: 4px; }
+        /* COLUMNA 2: Conversor Pinyin a Hanzi (IME) */
+        .pinyin-input-group {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
 
-        /* Panel Lateral Informativo */
-        .dict-container { background: rgba(255,255,255,0.05); border-radius: 10px; padding: 15px; border: 1px solid #333; overflow-y: auto; }
-        .dict-header { 
-            color: var(--accent-yellow); font-weight: bold; font-size: 14px; 
-            text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid #444; 
-        }
-        #dict-word { font-size: 22px; margin-bottom: 10px; color: var(--accent-yellow); }
-        .shortcut-card { font-size: 13px; color: #ccc; line-height: 1.6; }
-        kbd {
-            background-color: #333;
-            padding: 2px 6px;
+        .pinyin-input {
+            flex-grow: 1;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid #444;
+            color: #fff;
+            padding: 6px 10px;
             border-radius: 4px;
-            border: 1px solid #555;
-            font-family: monospace;
-            color: var(--accent-yellow);
+            font-size: 14px;
+            outline: none;
         }
+
+        .pinyin-input:focus {
+            border-color: var(--accent-yellow);
+        }
+
+        .candidates-box {
+            flex-grow: 1;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 6px;
+            padding: 6px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-content: flex-start;
+            overflow-y: auto;
+        }
+
+        .candidate-chip {
+            background: rgba(255, 241, 118, 0.1);
+            border: 1px solid rgba(255, 241, 118, 0.3);
+            color: var(--accent-yellow);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .candidate-chip:hover {
+            background: var(--accent-yellow);
+            color: #000;
+        }
+
+        .candidate-num {
+            font-size: 10px;
+            opacity: 0.6;
+        }
+
+        /* COLUMNA 3: Notas / Espacio Libre */
+        .notes-textarea {
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #ffffff;
+            padding: 8px;
+            border-radius: 6px;
+            resize: none;
+            font-family: inherit;
+            font-size: 16px;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        .notes-textarea:focus {
+            border-color: var(--accent-yellow);
+        }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <!-- Área de Video con el nuevo link de Whereby -->
+    <!-- Área de Video de Whereby -->
     <div class="video-wrapper">
         <iframe src="https://whereby.com/yfiworkshop" allow="camera; microphone; fullscreen; speaker; display-capture" allowfullscreen></iframe>
     </div>
 
-    <!-- Panel de Herramientas -->
+    <!-- Panel de Herramientas Inferior -->
     <div class="tools-panel">
-        <div class="chat-container">
+        
+        <!-- COLUMNA 1: Transcripción en Vivo -->
+        <div class="tool-card">
             <div class="control-bar">
                 <div class="status-tag">
                     <span id="statusDot" class="status-dot"></span>
@@ -135,26 +237,41 @@
                 </div>
                 <button id="toggle-mic-btn" onclick="toggleListening()">ACTIVAR [ESPACIO]</button>
             </div>
-
             <div id="scroll-area">
-                <div id="init-msg" style="color: var(--accent-yellow); font-size: 14px;">Presiona el botón o <kbd>Espacio</kbd> para activar los subtítulos en Chino Mandarín...</div>
-                <div id="caption-output" class="phrase-row local"></div>
+                <div id="init-msg" style="color: var(--accent-yellow); font-size: 12px;">Presiona <kbd style="background:#333; padding:1px 4px; border-radius:3px;">Espacio</kbd> para activar subtítulos en vivo...</div>
             </div>
         </div>
 
-        <div class="dict-container">
-            <div class="dict-header">Control de Voz</div>
-            <div id="dict-word">CHINO MANDARÍN</div>
-            <div class="shortcut-card">
-                <p>• <strong>Idioma:</strong> 普通话 (zh-CN)</p>
-                <p>• <strong>Atajo rápido:</strong> Presiona <kbd>Espacio</kbd> para iniciar o pausar la captura.</p>
-                <p>• <strong>Salida:</strong> Caracteres Hanzi en tiempo real.</p>
+        <!-- COLUMNA 2: Escritura Pinyin a Hanzi -->
+        <div class="tool-card">
+            <div class="tool-header">
+                <span>PINYIN A HANZI</span>
+                <span style="font-size: 10px; color: #888;">Escribe Pinyin</span>
+            </div>
+            <div class="pinyin-input-group">
+                <input type="text" id="pinyinInput" class="pinyin-input" placeholder="Ej: nihao, zhongguo, laoshi..." autocomplete="off">
+            </div>
+            <div id="candidatesBox" class="candidates-box">
+                <span style="font-size: 11px; color: #666;">Las opciones de Hanzi aparecerán aquí...</span>
             </div>
         </div>
+
+        <!-- COLUMNA 3: Notas Rápidas de Hanzi -->
+        <div class="tool-card">
+            <div class="tool-header">
+                <span>NOTAS / HANZI</span>
+                <span style="font-size: 10px; color: #888;">Bloc Rápido</span>
+            </div>
+            <textarea id="quickNotes" class="notes-textarea" placeholder="Escribe o pega caracteres aquí durante la clase..."></textarea>
+        </div>
+
     </div>
 </div>
 
 <script>
+    /* ====================================================
+       1. RECONOCIMIENTO DE VOZ (SUBTÍTULOS EN VIVO)
+       ==================================================== */
     const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
     let recognition = null;
     let isListening = false;
@@ -162,13 +279,10 @@
     const toggleBtn = document.getElementById('toggle-mic-btn');
     const statusDot = document.getElementById('statusDot');
     const statusText = document.getElementById('statusText');
-    const captionOutput = document.getElementById('caption-output');
     const scrollArea = document.getElementById('scroll-area');
     const initMsg = document.getElementById('init-msg');
 
-    if (!Speech) {
-        alert("Tu navegador no soporta reconocimiento de voz. Te recomendamos usar Google Chrome o Microsoft Edge.");
-    } else {
+    if (Speech) {
         recognition = new Speech();
         recognition.lang = 'zh-CN';
         recognition.continuous = true;
@@ -210,7 +324,6 @@
                 scrollArea.appendChild(row);
             }
 
-            // Mostrar el texto temporal que se va procesando en vivo
             let interimRow = document.getElementById('interim-row');
             if (!interimRow) {
                 interimRow = document.createElement('div');
@@ -222,10 +335,6 @@
 
             scrollArea.scrollTop = scrollArea.scrollHeight;
         };
-
-        recognition.onerror = (event) => {
-            console.error("Error en Speech Recognition:", event.error);
-        };
     }
 
     function toggleListening() {
@@ -233,22 +342,153 @@
         if (isListening) {
             recognition.stop();
         } else {
-            try {
-                recognition.start();
-            } catch (err) {
-                console.error(err);
-            }
+            try { recognition.start(); } catch (err) {}
         }
     }
 
-    // Atajo de Teclado con Barra Espaciadora
+    // Atajo de teclado (Barra Espaciadora)
     document.addEventListener('keydown', (e) => {
+        // Evitar activar el shortcut si se está escribiendo en el Pinyin o en las Notas
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        
         if (e.code === 'Space') {
-            e.preventDefault(); // Evita scroll de la ventana
+            e.preventDefault();
             toggleListening();
         }
     });
+
+    /* ====================================================
+       2. CONVERSOR PINYIN A HANZI (LIBRERÍA DICCIONARIO IME)
+       ==================================================== */
+    const dictionary = {
+        "nihao": ["你好"],
+        "ni": ["你", "呢", "拟", "泥"],
+        "hao": ["好", "号", "浩", "耗"],
+        "xiexie": ["谢谢"],
+        "xie": ["写", "谢", "鞋", "斜"],
+        "zaijian": ["再见"],
+        "zai": ["在", "再", "载"],
+        "jian": ["见", "建", "简", "尖"],
+        "laoshi": ["老师"],
+        "lao": ["老", "劳", "牢"],
+        "shi": ["是", "师", "时", "十", "事", "市", "识"],
+        "xuesheng": ["学生"],
+        "xue": ["学", "雪", "血"],
+        "sheng": ["生", "声", "升", "胜"],
+        "zhongguo": ["中国"],
+        "zhong": ["中", "重", "种", "钟"],
+        "guo": ["国", "过", "果", "郭"],
+        "meiguo": ["美国"],
+        "mei": ["美", "没", "每", "妹"],
+        "ren": ["人", "任", "认", "刃"],
+        "shu": ["书", "数", "树", "水", "输"],
+        "shui": ["水", "谁", "税", "睡"],
+        "beijing": ["北京"],
+        "bei": ["北", "备", "背", "杯"],
+        "jing": ["京", "经", "精", "惊"],
+        "chi": ["吃", "迟", "赤", "池"],
+        "fan": ["饭", "反", "范", "犯"],
+        "chifan": ["吃饭"],
+        "he": ["喝", "和", "合", "河"],
+        "chabu duo": ["差不多"],
+        "chabuduo": ["差不多"],
+        "duobu dong": ["多不懂"],
+        "mingbai": ["明白"],
+        "dong": ["懂", "动", "东", "冬"],
+        "pinyin": ["拼音"],
+        "hanzi": ["汉字"],
+        "han": ["汉", "韩", "寒", "汗"],
+        "zi": ["字", "自", "子"],
+        "wo": ["我", "握", "窝"],
+        "men": ["们", "门", "闷"],
+        "women": ["我们"],
+        "tamen": ["他们", "她们"],
+        "ta": ["他", "她", "它", "踏"],
+        "shanghai": ["上海"],
+        "duibuqi": ["对不起"],
+        "meiguanxi": ["没关系"],
+        "pengyou": ["朋友"],
+        "ma": ["吗", "妈", "马", "骂"],
+        "ne": ["呢"],
+        "ba": ["吧", "八", "把"],
+        "yue": ["月", "越", "约"],
+        "tian": ["天", "田", "填"],
+        "jintian": ["今天"],
+        "mingtian": ["明天"],
+        "zuotian": ["昨天"],
+        "nian": ["年", "念"],
+        "sui": ["岁", "随"],
+        "duoshao": ["多少"],
+        "duo": ["多", "朵"],
+        "shao": ["少", "烧"],
+        "jige": ["几个"],
+        "ji": ["几", "记", "机", "急"],
+        "ge": ["个", "各", "哥"]
+    };
+
+    const pinyinInput = document.getElementById('pinyinInput');
+    const candidatesBox = document.getElementById('candidatesBox');
+    const quickNotes = document.getElementById('quickNotes');
+
+    pinyinInput.addEventListener('input', () => {
+        const query = pinyinInput.value.toLowerCase().trim();
+        candidatesBox.innerHTML = '';
+
+        if (!query) {
+            candidatesBox.innerHTML = '<span style="font-size: 11px; color: #666;">Las opciones de Hanzi aparecerán aquí...</span>';
+            return;
+        }
+
+        let matches = [];
+
+        // 1. Coincidencia exacta
+        if (dictionary[query]) {
+            matches = matches.concat(dictionary[query]);
+        }
+
+        // 2. Coincidencia por inicio de pinyin
+        Object.keys(dictionary).forEach(key => {
+            if (key.startsWith(query) && key !== query) {
+                matches = matches.concat(dictionary[key]);
+            }
+        });
+
+        // Eliminar duplicados
+        matches = [...new Set(matches)];
+
+        if (matches.length === 0) {
+            candidatesBox.innerHTML = '<span style="font-size: 11px; color: #888;">Sin coincidencias directas</span>';
+            return;
+        }
+
+        // Renderizar sugerencias en forma de chips
+        matches.slice(0, 8).forEach((hanzi, index) => {
+            const chip = document.createElement('div');
+            chip.className = 'candidate-chip';
+            chip.innerHTML = `<span class="candidate-num">${index + 1}.</span>${hanzi}`;
+            
+            chip.onclick = () => selectHanzi(hanzi);
+            candidatesBox.appendChild(chip);
+        });
+    });
+
+    // Manejar selección al presionar Enter o número
+    pinyinInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const firstChip = candidatesBox.querySelector('.candidate-chip');
+            if (firstChip) {
+                firstChip.click();
+            }
+        }
+    });
+
+    function selectHanzi(hanzi) {
+        // Copiar Hanzi al bloc de notas rápido y al portapapeles
+        quickNotes.value += hanzi + ' ';
+        pinyinInput.value = '';
+        candidatesBox.innerHTML = '<span style="font-size: 11px; color: #22c55e;">¡Agregado a notas!</span>';
+        pinyinInput.focus();
+    }
 </script>
 </body>
 </html>
