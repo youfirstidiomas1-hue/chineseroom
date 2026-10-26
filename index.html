@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,267 +11,167 @@
             --accent-yellow: #fff176;
             --mirror: #af8b4a;
             --danger-red: #ef4444;
-            --border-color: #333333;
         }
 
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
             background: var(--bg-dark); color: white; 
-            font-family: 'Segoe UI', Tahoma, "PingFang SC", "Microsoft YaHei", sans-serif; 
-            overflow: hidden; 
+            font-family: 'Segoe UI', Tahoma, "PingFang SC", "Microsoft YaHei", sans-serif; overflow: hidden; 
         }
 
         .app-container { 
-            display: grid; 
-            grid-template-rows: 1fr 220px; 
-            height: 100vh; 
-            width: 100vw; 
+            display: grid; grid-template-rows: 1fr 230px; 
+            height: 100vh; width: 100vw; 
         }
 
-        /* Área de Video sin Tags */
-        .video-wrapper { position: relative; background: #000; width: 100%; height: 100%; }
+        /* Área de Vídeo */
+        .video-wrapper { position: relative; background: #000; }
         iframe { width: 100%; height: 100%; border: none; }
 
-        /* Panel de Herramientas Inferior - 3 Columnas */
+        /* Painel de Ferramentas com 3 Colunas */
         .tools-panel { 
-            background: var(--panel-bg); 
-            border-top: 2px solid var(--border-color); 
-            display: grid; 
-            grid-template-columns: 1.2fr 1fr 0.8fr; 
-            gap: 12px; 
-            padding: 12px; 
-            box-sizing: border-box; 
-            height: 220px;
+            background: var(--panel-bg); border-top: 2px solid #333; 
+            display: grid; grid-template-columns: 2fr 1fr 1fr; 
+            gap: 12px; padding: 12px; box-sizing: border-box; 
         }
 
-        /* Estructura de Columnas Generales */
-        .tool-card {
-            background: rgba(255,255,255,0.03); 
-            border-radius: 10px; 
-            display: flex; 
-            flex-direction: column; 
-            overflow: hidden; 
-            border: 1px solid var(--border-color); 
-            position: relative;
-            padding: 10px;
-            box-sizing: border-box;
+        .panel-box { 
+            background: rgba(255,255,255,0.03); border-radius: 10px; 
+            display: flex; flex-direction: column; overflow: hidden; 
+            border: 1px solid #333; position: relative; padding: 10px; box-sizing: border-box;
         }
 
-        .tool-header {
-            color: var(--accent-yellow); 
-            font-weight: bold; 
-            font-size: 12px; 
-            text-transform: uppercase; 
-            letter-spacing: 0.5px;
-            margin-bottom: 8px; 
-            padding-bottom: 5px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .panel-header { 
+            color: var(--accent-yellow); font-weight: bold; font-size: 11px; 
+            text-transform: uppercase; margin-bottom: 8px; border-bottom: 1px solid #444; 
+            padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center;
         }
 
-        /* COLUMNA 1: Subtítulos en Vivo */
+        /* Controle do Microfone */
         .control-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 6px;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 4px 8px; background: rgba(0,0,0,0.2); border-bottom: 1px solid #333; margin-bottom: 8px;
         }
 
-        .status-tag {
-            font-size: 11px;
-            color: #aaa;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background-color: #666;
-            display: inline-block;
-        }
-
-        .status-dot.active {
-            background-color: #22c55e;
-            box-shadow: 0 0 6px #22c55e;
-        }
+        .status-tag { font-size: 10px; color: #aaa; display: flex; align-items: center; gap: 6px; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background-color: #666; display: inline-block; }
+        .status-dot.active { background-color: #22c55e; box-shadow: 0 0 6px #22c55e; }
 
         #toggle-mic-btn {
-            background: var(--accent-yellow);
-            border: 1px solid var(--accent-yellow);
-            color: #000;
-            font-weight: bold;
-            font-size: 10px;
-            padding: 4px 8px;
-            border-radius: 4px;
-            cursor: pointer;
-            text-transform: uppercase;
-            transition: 0.3s;
+            background: var(--accent-yellow); border: 1px solid var(--accent-yellow);
+            color: #000; font-weight: bold; font-size: 10px; padding: 4px 8px;
+            border-radius: 4px; cursor: pointer; text-transform: uppercase; transition: 0.3s;
         }
+        #toggle-mic-btn.recording { background: var(--danger-red); border-color: var(--danger-red); color: #ffffff; }
 
-        #toggle-mic-btn.recording {
-            background: var(--danger-red);
-            border-color: var(--danger-red);
-            color: #ffffff;
-        }
-
-        #scroll-area { 
-            flex-grow: 1; 
-            overflow-y: auto; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 8px; 
-            padding-right: 4px;
-        }
-
-        .phrase-row { font-size: 20px; line-height: 1.4; letter-spacing: 1px; word-break: break-all; }
+        #scroll-area { flex-grow: 1; overflow-y: auto; padding: 5px; display: flex; flex-direction: column; gap: 8px; }
+        .phrase-row { font-size: 22px; line-height: 1.3; letter-spacing: 1px; }
         .local { color: #ffffff; }
+        .remote { color: var(--mirror); border-left: 3px solid var(--mirror); padding-left: 8px; }
         .interim-text { color: #888888; font-style: italic; }
 
-        /* COLUMNA 2: Conversor Pinyin a Hanzi (IME) */
-        .pinyin-input-group {
-            display: flex;
-            gap: 6px;
-            margin-bottom: 8px;
+        /* Conversor Pinyin para Hanzi */
+        .pinyin-input-box {
+            width: 100%; padding: 8px; background: rgba(0,0,0,0.4); border: 1px solid #444;
+            color: var(--accent-yellow); font-size: 14px; border-radius: 4px; outline: none; margin-bottom: 8px; box-sizing: border-box;
         }
-
-        .pinyin-input {
-            flex-grow: 1;
-            background: rgba(0,0,0,0.4);
-            border: 1px solid #444;
-            color: #fff;
-            padding: 6px 10px;
-            border-radius: 4px;
-            font-size: 14px;
-            outline: none;
+        .hanzi-candidates { display: flex; flex-wrap: wrap; gap: 6px; overflow-y: auto; flex-grow: 1; }
+        .candidate-item {
+            background: rgba(255, 241, 118, 0.1); border: 1px solid #555; color: #fff;
+            padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 18px; transition: 0.2s;
         }
+        .candidate-item:hover { background: var(--accent-yellow); color: #000; }
 
-        .pinyin-input:focus {
-            border-color: var(--accent-yellow);
+        /* Bloco de Notas Sincronizado */
+        #shared-notes {
+            width: 100%; height: 100%; background: transparent; border: none;
+            color: #fff; font-size: 16px; line-height: 1.4; resize: none; outline: none;
         }
-
-        .candidates-box {
-            flex-grow: 1;
-            background: rgba(0,0,0,0.2);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 6px;
-            padding: 6px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            align-content: flex-start;
-            overflow-y: auto;
-        }
-
-        .candidate-chip {
-            background: rgba(255, 241, 118, 0.1);
-            border: 1px solid rgba(255, 241, 118, 0.3);
-            color: var(--accent-yellow);
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 18px;
-            cursor: pointer;
-            transition: 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .candidate-chip:hover {
-            background: var(--accent-yellow);
-            color: #000;
-        }
-
-        .candidate-num {
-            font-size: 10px;
-            opacity: 0.6;
-        }
-
-        /* COLUMNA 3: Notas / Espacio Libre */
-        .notes-textarea {
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: #ffffff;
-            padding: 8px;
-            border-radius: 6px;
-            resize: none;
-            font-family: inherit;
-            font-size: 16px;
-            box-sizing: border-box;
-            outline: none;
-        }
-
-        .notes-textarea:focus {
-            border-color: var(--accent-yellow);
-        }
-
-        /* Custom Scrollbars */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <!-- Área de Video de Whereby -->
+    <!-- Vídeo com a Sala Whereby -->
     <div class="video-wrapper">
         <iframe src="https://whereby.com/yfiworkshop" allow="camera; microphone; fullscreen; speaker; display-capture" allowfullscreen></iframe>
     </div>
 
-    <!-- Panel de Herramientas Inferior -->
+    <!-- Painel Inferior Sincronizado em Português -->
     <div class="tools-panel">
-        
-        <!-- COLUMNA 1: Transcripción en Vivo -->
-        <div class="tool-card">
+        <!-- Coluna 1: Legendas por Voz em Tempo Real -->
+        <div class="panel-box">
             <div class="control-bar">
                 <div class="status-tag">
                     <span id="statusDot" class="status-dot"></span>
-                    <span id="statusText">DESACTIVADO</span>
+                    <span id="statusText">DESATIVADO</span>
                 </div>
-                <button id="toggle-mic-btn" onclick="toggleListening()">ACTIVAR [ESPACIO]</button>
+                <button id="toggle-mic-btn" onclick="toggleListening()">ATIVAR [ESPAÇO]</button>
             </div>
             <div id="scroll-area">
-                <div id="init-msg" style="color: var(--accent-yellow); font-size: 12px;">Presiona <kbd style="background:#333; padding:1px 4px; border-radius:3px;">Espacio</kbd> para activar subtítulos en vivo...</div>
+                <div id="init-msg" style="color: var(--accent-yellow); font-size: 12px;">Pressione o botão ou <kbd>Espaço</kbd> para ativar a captura em Chinês Mandarim...</div>
             </div>
         </div>
 
-        <!-- COLUMNA 2: Escritura Pinyin a Hanzi -->
-        <div class="tool-card">
-            <div class="tool-header">
-                <span>PINYIN A HANZI</span>
-                <span style="font-size: 10px; color: #888;">Escribe Pinyin</span>
-            </div>
-            <div class="pinyin-input-group">
-                <input type="text" id="pinyinInput" class="pinyin-input" placeholder="Ej: nihao, zhongguo, laoshi..." autocomplete="off">
-            </div>
-            <div id="candidatesBox" class="candidates-box">
-                <span style="font-size: 11px; color: #666;">Las opciones de Hanzi aparecerán aquí...</span>
-            </div>
+        <!-- Coluna 2: Conversor Pinyin -> Hanzi -->
+        <div class="panel-box">
+            <div class="panel-header">Teclado Pinyin (Hanzi)</div>
+            <input type="text" id="pinyinInput" class="pinyin-input-box" placeholder="Digite Pinyin (ex: nihao, laoshi)..." oninput="convertPinyin()">
+            <div id="candidates" class="hanzi-candidates"></div>
         </div>
 
-        <!-- COLUMNA 3: Notas Rápidas de Hanzi -->
-        <div class="tool-card">
-            <div class="tool-header">
-                <span>NOTAS / HANZI</span>
-                <span style="font-size: 10px; color: #888;">Bloc Rápido</span>
-            </div>
-            <textarea id="quickNotes" class="notes-textarea" placeholder="Escribe o pega caracteres aquí durante la clase..."></textarea>
+        <!-- Coluna 3: Bloco de Notas Espelhado / Compartilhado -->
+        <div class="panel-box">
+            <div class="panel-header">Anotações Compartilhadas</div>
+            <textarea id="shared-notes" placeholder="As anotações escritas aqui aparecem em tempo real para todos na sala..." oninput="syncNotes()"></textarea>
         </div>
-
     </div>
 </div>
 
 <script>
-    /* ====================================================
-       1. RECONOCIMIENTO DE VOZ (SUBTÍTULOS EN VIVO)
-       ==================================================== */
+    // Configuração do Espelhamento (Firebase Realtime DB)
+    const DB_URL = "https://chat-tool-d26fd-default-rtdb.firebaseio.com/live_session_mandarin.json";
+    const myID = "USER_ZH_" + Math.random().toString(36).substring(7);
+    let lastTimestamp = 0;
+
+    async function sync(text, type, extra = null) {
+        const payload = { text, type, sender: myID, timestamp: Date.now(), extra };
+        try {
+            await fetch(DB_URL, { method: 'PATCH', body: JSON.stringify({ "lastEvent": payload }) });
+            render(payload, false);
+        } catch (e) {}
+    }
+
+    setInterval(async () => {
+        try {
+            const res = await fetch(DB_URL);
+            const data = await res.json();
+            if (data?.lastEvent) {
+                const ev = data.lastEvent;
+                if (ev.timestamp > lastTimestamp && ev.sender !== myID) {
+                    lastTimestamp = ev.timestamp;
+                    render(ev, true);
+                }
+            }
+        } catch (e) {}
+    }, 1200);
+
+    function render(data, isRemote) {
+        if (data.type === 'phrase') {
+            const row = document.createElement('div');
+            row.className = `phrase-row ${isRemote ? 'remote' : 'local'}`;
+            row.innerText = data.text;
+            const scrollArea = document.getElementById('scroll-area');
+            scrollArea.appendChild(row);
+            scrollArea.scrollTop = scrollArea.scrollHeight;
+            const initMsg = document.getElementById('init-msg');
+            if (initMsg) initMsg.style.display = 'none';
+        } else if (data.type === 'notes') {
+            document.getElementById('shared-notes').value = data.text;
+        }
+    }
+
+    // Reconhecimento de Voz (Mandarim zh-CN)
     const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
     let recognition = null;
     let isListening = false;
@@ -280,7 +180,6 @@
     const statusDot = document.getElementById('statusDot');
     const statusText = document.getElementById('statusText');
     const scrollArea = document.getElementById('scroll-area');
-    const initMsg = document.getElementById('init-msg');
 
     if (Speech) {
         recognition = new Speech();
@@ -290,204 +189,81 @@
 
         recognition.onstart = () => {
             isListening = true;
-            toggleBtn.innerText = "DETENER [ESPACIO]";
+            toggleBtn.innerText = "PARAR [ESPAÇO]";
             toggleBtn.classList.add("recording");
             statusDot.classList.add("active");
-            statusText.innerText = "ESCUCHANDO...";
-            if (initMsg) initMsg.style.display = 'none';
+            statusText.innerText = "OUVINDO...";
         };
 
         recognition.onend = () => {
             isListening = false;
-            toggleBtn.innerText = "ACTIVAR [ESPACIO]";
+            toggleBtn.innerText = "ATIVAR [ESPAÇO]";
             toggleBtn.classList.remove("recording");
             statusDot.classList.remove("active");
-            statusText.innerText = "DESACTIVADO";
+            statusText.innerText = "DESATIVADO";
         };
 
         recognition.onresult = (e) => {
-            let finalTranscript = '';
-            let interimTranscript = '';
-
             for (let i = e.resultIndex; i < e.results.length; ++i) {
                 if (e.results[i].isFinal) {
-                    finalTranscript += e.results[i][0].transcript;
-                } else {
-                    interimTranscript += e.results[i][0].transcript;
+                    const text = e.results[i][0].transcript.trim();
+                    sync(text, 'phrase');
                 }
             }
-
-            if (finalTranscript) {
-                const row = document.createElement('div');
-                row.className = 'phrase-row local';
-                row.innerText = finalTranscript;
-                scrollArea.appendChild(row);
-            }
-
-            let interimRow = document.getElementById('interim-row');
-            if (!interimRow) {
-                interimRow = document.createElement('div');
-                interimRow.id = 'interim-row';
-                interimRow.className = 'phrase-row interim-text';
-                scrollArea.appendChild(interimRow);
-            }
-            interimRow.innerText = interimTranscript;
-
-            scrollArea.scrollTop = scrollArea.scrollHeight;
         };
     }
 
     function toggleListening() {
         if (!recognition) return;
-        if (isListening) {
-            recognition.stop();
-        } else {
-            try { recognition.start(); } catch (err) {}
-        }
+        if (isListening) { recognition.stop(); } 
+        else { try { recognition.start(); } catch (err) {} }
     }
 
-    // Atajo de teclado (Barra Espaciadora)
     document.addEventListener('keydown', (e) => {
-        // Evitar activar el shortcut si se está escribiendo en el Pinyin o en las Notas
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-        
         if (e.code === 'Space') {
             e.preventDefault();
             toggleListening();
         }
     });
 
-    /* ====================================================
-       2. CONVERSOR PINYIN A HANZI (LIBRERÍA DICCIONARIO IME)
-       ==================================================== */
-    const dictionary = {
-        "nihao": ["你好"],
-        "ni": ["你", "呢", "拟", "泥"],
-        "hao": ["好", "号", "浩", "耗"],
-        "xiexie": ["谢谢"],
-        "xie": ["写", "谢", "鞋", "斜"],
-        "zaijian": ["再见"],
-        "zai": ["在", "再", "载"],
-        "jian": ["见", "建", "简", "尖"],
-        "laoshi": ["老师"],
-        "lao": ["老", "劳", "牢"],
-        "shi": ["是", "师", "时", "十", "事", "市", "识"],
-        "xuesheng": ["学生"],
-        "xue": ["学", "雪", "血"],
-        "sheng": ["生", "声", "升", "胜"],
-        "zhongguo": ["中国"],
-        "zhong": ["中", "重", "种", "钟"],
-        "guo": ["国", "过", "果", "郭"],
-        "meiguo": ["美国"],
-        "mei": ["美", "没", "每", "妹"],
-        "ren": ["人", "任", "认", "刃"],
-        "shu": ["书", "数", "树", "水", "输"],
-        "shui": ["水", "谁", "税", "睡"],
-        "beijing": ["北京"],
-        "bei": ["北", "备", "背", "杯"],
-        "jing": ["京", "经", "精", "惊"],
-        "chi": ["吃", "迟", "赤", "池"],
-        "fan": ["饭", "反", "范", "犯"],
-        "chifan": ["吃饭"],
-        "he": ["喝", "和", "合", "河"],
-        "chabu duo": ["差不多"],
-        "chabuduo": ["差不多"],
-        "duobu dong": ["多不懂"],
-        "mingbai": ["明白"],
-        "dong": ["懂", "动", "东", "冬"],
-        "pinyin": ["拼音"],
-        "hanzi": ["汉字"],
-        "han": ["汉", "韩", "寒", "汗"],
-        "zi": ["字", "自", "子"],
-        "wo": ["我", "握", "窝"],
-        "men": ["们", "门", "闷"],
-        "women": ["我们"],
-        "tamen": ["他们", "她们"],
-        "ta": ["他", "她", "它", "踏"],
-        "shanghai": ["上海"],
-        "duibuqi": ["对不起"],
-        "meiguanxi": ["没关系"],
-        "pengyou": ["朋友"],
-        "ma": ["吗", "妈", "马", "骂"],
-        "ne": ["呢"],
-        "ba": ["吧", "八", "把"],
-        "yue": ["月", "越", "约"],
-        "tian": ["天", "田", "填"],
-        "jintian": ["今天"],
-        "mingtian": ["明天"],
-        "zuotian": ["昨天"],
-        "nian": ["年", "念"],
-        "sui": ["岁", "随"],
-        "duoshao": ["多少"],
-        "duo": ["多", "朵"],
-        "shao": ["少", "烧"],
-        "jige": ["几个"],
-        "ji": ["几", "记", "机", "急"],
-        "ge": ["个", "各", "哥"]
+    // Dicionário Básico de Pinyin para Hanzi
+    const pinyinDict = {
+        "nihao": ["你好"], "laoshi": ["老师"], "xiexie": ["谢谢"], "zaijian": ["再见"],
+        "zhongguo": ["中国"], "meiguo": ["美国"], "hanyu": ["汉语"], "putonghua": ["普通话"],
+        "wo": ["我"], "ni": ["你"], "ta": ["他", "她", "它"], "men": ["们"],
+        "shi": ["是", "事", "十", "时"], "bu": ["不"], "hao": ["好"], "ren": ["人"],
+        "duoshao": ["多少"], "qian": ["钱"], "shuijiao": ["睡觉", "水饺"], "chifan": ["吃饭"]
     };
 
-    const pinyinInput = document.getElementById('pinyinInput');
-    const candidatesBox = document.getElementById('candidatesBox');
-    const quickNotes = document.getElementById('quickNotes');
+    function convertPinyin() {
+        const input = document.getElementById('pinyinInput').value.toLowerCase().trim();
+        const candidatesContainer = document.getElementById('candidates');
+        candidatesContainer.innerHTML = '';
 
-    pinyinInput.addEventListener('input', () => {
-        const query = pinyinInput.value.toLowerCase().trim();
-        candidatesBox.innerHTML = '';
-
-        if (!query) {
-            candidatesBox.innerHTML = '<span style="font-size: 11px; color: #666;">Las opciones de Hanzi aparecerán aquí...</span>';
-            return;
+        if (pinyinDict[input]) {
+            pinyinDict[input].forEach(char => {
+                const item = document.createElement('span');
+                item.className = 'candidate-item';
+                item.innerText = char;
+                item.onclick = () => selectHanzi(char);
+                candidatesContainer.appendChild(item);
+            });
         }
+    }
 
-        let matches = [];
+    function selectHanzi(char) {
+        sync(char, 'phrase');
+        const notes = document.getElementById('shared-notes');
+        notes.value += char;
+        syncNotes();
+        document.getElementById('pinyinInput').value = '';
+        document.getElementById('candidates').innerHTML = '';
+    }
 
-        // 1. Coincidencia exacta
-        if (dictionary[query]) {
-            matches = matches.concat(dictionary[query]);
-        }
-
-        // 2. Coincidencia por inicio de pinyin
-        Object.keys(dictionary).forEach(key => {
-            if (key.startsWith(query) && key !== query) {
-                matches = matches.concat(dictionary[key]);
-            }
-        });
-
-        // Eliminar duplicados
-        matches = [...new Set(matches)];
-
-        if (matches.length === 0) {
-            candidatesBox.innerHTML = '<span style="font-size: 11px; color: #888;">Sin coincidencias directas</span>';
-            return;
-        }
-
-        // Renderizar sugerencias en forma de chips
-        matches.slice(0, 8).forEach((hanzi, index) => {
-            const chip = document.createElement('div');
-            chip.className = 'candidate-chip';
-            chip.innerHTML = `<span class="candidate-num">${index + 1}.</span>${hanzi}`;
-            
-            chip.onclick = () => selectHanzi(hanzi);
-            candidatesBox.appendChild(chip);
-        });
-    });
-
-    // Manejar selección al presionar Enter o número
-    pinyinInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            const firstChip = candidatesBox.querySelector('.candidate-chip');
-            if (firstChip) {
-                firstChip.click();
-            }
-        }
-    });
-
-    function selectHanzi(hanzi) {
-        // Copiar Hanzi al bloc de notas rápido y al portapapeles
-        quickNotes.value += hanzi + ' ';
-        pinyinInput.value = '';
-        candidatesBox.innerHTML = '<span style="font-size: 11px; color: #22c55e;">¡Agregado a notas!</span>';
-        pinyinInput.focus();
+    function syncNotes() {
+        const text = document.getElementById('shared-notes').value;
+        sync(text, 'notes');
     }
 </script>
 </body>
