@@ -47,6 +47,14 @@
             padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center;
         }
 
+        /* Botão Copiar nas Notas */
+        .copy-btn {
+            background: rgba(255,255,255,0.1); border: 1px solid #555;
+            color: var(--accent-yellow); font-size: 10px; padding: 2px 6px;
+            border-radius: 4px; cursor: pointer; text-transform: uppercase; transition: 0.2s;
+        }
+        .copy-btn:hover { background: var(--accent-yellow); color: #000; }
+
         /* Controle do Microfone */
         .control-bar {
             display: flex; justify-content: space-between; align-items: center;
@@ -81,10 +89,10 @@
         }
         .candidate-item:hover { background: var(--accent-yellow); color: #000; }
 
-        /* Bloco de Notas Sincronizado (Empilhado verticalmente) */
+        /* Bloco de Notas Sincronizado */
         #shared-notes {
             width: 100%; height: 100%; background: transparent; border: none;
-            color: #fff; font-size: 20px; line-height: 1.6; resize: none; outline: none;
+            color: #fff; font-size: 22px; line-height: 1.5; resize: none; outline: none;
             white-space: pre-wrap;
         }
     </style>
@@ -97,7 +105,7 @@
         <iframe src="https://whereby.com/yfiworkshop" allow="camera; microphone; fullscreen; speaker; display-capture" allowfullscreen></iframe>
     </div>
 
-    <!-- Painel Inferior Sincronizado em Português -->
+    <!-- Painel Inferior Sincronizado -->
     <div class="tools-panel">
         <!-- Coluna 1: Legendas por Voz em Tempo Real -->
         <div class="panel-box">
@@ -109,7 +117,7 @@
                 <button id="toggle-mic-btn" onclick="toggleListening()">ATIVAR [ESPAÇO]</button>
             </div>
             <div id="scroll-area">
-                <div id="init-msg" style="color: var(--accent-yellow); font-size: 12px;">Pressione o botão ou <kbd>Espaço</kbd> para ativar a captura em Chinês Mandarim...</div>
+                <div id="init-msg" style="color: var(--accent-yellow); font-size: 12px;">Pressione <kbd>Espaço</kbd> para ouvir o Chinês Mandarim...</div>
             </div>
         </div>
 
@@ -122,8 +130,11 @@
 
         <!-- Coluna 3: Bloco de Notas Espelhado / Compartilhado -->
         <div class="panel-box">
-            <div class="panel-header">Anotações Compartilhadas</div>
-            <textarea id="shared-notes" placeholder="As anotações aparecem abaixo umas das outras..." oninput="syncNotes()"></textarea>
+            <div class="panel-header">
+                <span>Anotações</span>
+                <button class="copy-btn" onclick="copyNotes()">Copiar</button>
+            </div>
+            <textarea id="shared-notes" placeholder="Resultados um abaixo do outro..." oninput="syncNotes()"></textarea>
         </div>
     </div>
 </div>
@@ -134,8 +145,8 @@
     const myID = "USER_ZH_" + Math.random().toString(36).substring(7);
     let lastTimestamp = 0;
 
-    async function sync(text, type, extra = null) {
-        const payload = { text, type, sender: myID, timestamp: Date.now(), extra };
+    async function sync(text, type) {
+        const payload = { text, type, sender: myID, timestamp: Date.now() };
         try {
             await fetch(DB_URL, { method: 'PATCH', body: JSON.stringify({ "lastEvent": payload }) });
         } catch (e) {}
@@ -149,16 +160,16 @@
                 const ev = data.lastEvent;
                 if (ev.timestamp > lastTimestamp && ev.sender !== myID) {
                     lastTimestamp = ev.timestamp;
-                    render(ev, true);
+                    renderRemote(ev);
                 }
             }
         } catch (e) {}
     }, 1200);
 
-    function render(data, isRemote) {
+    function renderRemote(data) {
         if (data.type === 'phrase') {
             const row = document.createElement('div');
-            row.className = `phrase-row ${isRemote ? 'remote' : 'local'}`;
+            row.className = 'phrase-row remote';
             row.innerText = data.text;
             const scrollArea = document.getElementById('scroll-area');
             scrollArea.appendChild(row);
@@ -233,14 +244,14 @@
         }
     });
 
-    // Dicionário Ampliado de Pinyin para Hanzi (sem falhas de limpeza)
+    // Dicionário Ampliado Pinyin -> Hanzi
     const pinyinDict = {
         "nihao": ["你好"], "laoshi": ["老师"], "xiexie": ["谢谢"], "zaijian": ["再见"],
         "zhongguo": ["中国"], "meiguo": ["美国"], "hanyu": ["汉语"], "putonghua": ["普通话"],
         "wo": ["我"], "ni": ["你"], "ta": ["他", "她"], "men": ["们"],
         "shi": ["是", "十", "时"], "bu": ["不"], "hao": ["好"], "ren": ["人"],
         "duoshao": ["多少"], "qian": ["钱"], "shuijiao": ["睡觉", "水饺"], "chifan": ["吃饭"],
-        "xuesheng": ["学生"], "xuexiao": ["学校"], "nihao": ["你好"], "pengyou": ["朋友"],
+        "xuesheng": ["学生"], "xuexiao": ["学校"], "pengyou": ["朋友"],
         "ma": ["吗"], "ne": ["呢"], "le": ["了"], "de": ["的"]
     };
 
@@ -251,15 +262,12 @@
 
         if (!input) return;
 
-        // Búsqueda directa o por coincidencia parcial en el diccionario
         let matches = [];
         for (let key in pinyinDict) {
             if (key.startsWith(input)) {
                 matches = matches.concat(pinyinDict[key]);
             }
         }
-
-        // Eliminar duplicados
         matches = [...new Set(matches)];
 
         matches.forEach(char => {
@@ -273,7 +281,7 @@
 
     function selectHanzi(char) {
         const notes = document.getElementById('shared-notes');
-        // Agrega el nuevo Hanzi con un salto de línea hacia abajo
+        // Inserta cada Hanzi seleccionado uno debajo del otro (verticalmente)
         if (notes.value.trim() === "") {
             notes.value = char;
         } else {
@@ -288,6 +296,16 @@
     function syncNotes() {
         const text = document.getElementById('shared-notes').value;
         sync(text, 'notes');
+    }
+
+    function copyNotes() {
+        const notes = document.getElementById('shared-notes');
+        notes.select();
+        navigator.clipboard.writeText(notes.value).then(() => {
+            const btn = document.querySelector('.copy-btn');
+            btn.innerText = "Copiado!";
+            setTimeout(() => { btn.innerText = "Copiar"; }, 1500);
+        });
     }
 </script>
 </body>
