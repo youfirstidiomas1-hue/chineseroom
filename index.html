@@ -82,7 +82,7 @@
             width: 100%; padding: 8px; background: rgba(0,0,0,0.4); border: 1px solid #444;
             color: var(--accent-yellow); font-size: 14px; border-radius: 4px; outline: none; margin-bottom: 8px; box-sizing: border-box;
         }
-        .hanzi-candidates { display: flex; flex-wrap: wrap; gap: 6px; overflow-y: auto; flex-grow: 1; max-height: 100px; }
+        .hanzi-candidates { display: flex; flex-wrap: wrap; gap: 6px; overflow-y: auto; flex-grow: 1; max-height: 110px; }
         .candidate-item {
             background: rgba(255, 241, 118, 0.1); border: 1px solid #555; color: #fff;
             padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 18px; transition: 0.2s;
@@ -124,7 +124,7 @@
         <!-- Coluna 2: Conversor Pinyin -> Hanzi -->
         <div class="panel-box">
             <div class="panel-header">Teclado Pinyin (Hanzi)</div>
-            <input type="text" id="pinyinInput" class="pinyin-input-box" placeholder="Digite Pinyin (ex: nihao, laoshi)..." oninput="convertPinyin()">
+            <input type="text" id="pinyinInput" class="pinyin-input-box" placeholder="Digite Pinyin (ex: nihao, zh...)" oninput="convertPinyin()">
             <div id="candidates" class="hanzi-candidates"></div>
         </div>
 
@@ -244,15 +244,65 @@
         }
     });
 
-    // Dicionário Ampliado Pinyin -> Hanzi
+    // Dicionário Ampliado de Pinyin (Soporta búsqueda por prefijos como 'zh', 'ni', etc.)
     const pinyinDict = {
-        "nihao": ["你好"], "laoshi": ["老师"], "xiexie": ["谢谢"], "zaijian": ["再见"],
-        "zhongguo": ["中国"], "meiguo": ["美国"], "hanyu": ["汉语"], "putonghua": ["普通话"],
-        "wo": ["我"], "ni": ["你"], "ta": ["他", "她"], "men": ["们"],
-        "shi": ["是", "十", "时"], "bu": ["不"], "hao": ["好"], "ren": ["人"],
-        "duoshao": ["多少"], "qian": ["钱"], "shuijiao": ["睡觉", "水饺"], "chifan": ["吃饭"],
-        "xuesheng": ["学生"], "xuexiao": ["学校"], "pengyou": ["朋友"],
-        "ma": ["吗"], "ne": ["呢"], "le": ["了"], "de": ["的"]
+        "n": ["你", "呢", "那", "哪", "您"],
+        "ni": ["你", "您"],
+        "nih": ["你好"],
+        "nihao": ["你好"],
+        "l": ["老师", "零", "两", "来", "乐"],
+        "lao": ["老", "劳"],
+        "laos": ["老师"],
+        "laoshi": ["老师"],
+        "xie": ["谢", "写", "些"],
+        "xiexie": ["谢谢"],
+        "zai": ["在", "再"],
+        "zaijian": ["再见"],
+        "zh": ["中", "这", "只", "知道", "中国", "者", "主"],
+        "zho": ["中", "中国", "周", "重要"],
+        "zhong": ["中", "中国", "钟"],
+        "zhongg": ["中国"],
+        "zhongguo": ["中国"],
+        "m": ["我", "门", "吗", "美", "妈", "买", "慢"],
+        "me": ["美", "们", "么"],
+        "mei": ["美", "没", "每"],
+        "meiguo": ["美国"],
+        "h": ["好", "汉", "话", "很", "和", "会", "后"],
+        "ha": ["哈", "孩", "海"],
+        "hao": ["好"],
+        "han": ["汉", "汗"],
+        "hanyu": ["汉语"],
+        "p": ["普通话", "朋", "票", "片", "旁"],
+        "pu": ["普通"],
+        "putong": ["普通"],
+        "putonghua": ["普通话"],
+        "peng": ["朋"],
+        "pengyou": ["朋友"],
+        "w": ["我", "问", "晚", "外", "完", "万"],
+        "wo": ["我"],
+        "s": ["是", "十", "时", "水", "说", "书", "生", "学校"],
+        "sh": ["是", "十", "时", "说", "书", "学生", "学校", "睡觉"],
+        "shi": ["是", "十", "时", "事", "室", "识"],
+        "x": ["学", "谢", "想", "下", "笑", "西", "心"],
+        "xu": ["学", "许", "需"],
+        "xue": ["学"],
+        "xuesheng": ["学生"],
+        "xuexiao": ["学校"],
+        "b": ["不", "爸", "杯", "笔", "北", "本", "病"],
+        "bu": ["不", "步"],
+        "t": ["他", "她", "它", "听", "同", "太", "疼"],
+        "ta": ["他", "她", "它"],
+        "r": ["人", "日", "肉", "热", "认", "然"],
+        "ren": ["人", "认", "任"],
+        "d": ["多", "大", "电", "店", "点", "读", "懂"],
+        "du": ["多", "读", "度"],
+        "duo": ["多", "朵"],
+        "duoshao": ["多少"],
+        "q": ["钱", "请", "去", "前", "起", "汽"],
+        "qian": ["钱", "前", "千"],
+        "ch": ["吃", "车", "出", "长", "常", "场"],
+        "chi": ["吃", "迟"],
+        "chifan": ["吃饭"]
     };
 
     function convertPinyin() {
@@ -263,13 +313,24 @@
         if (!input) return;
 
         let matches = [];
+
+        // Busca todas las entradas en el diccionario cuyo pinyin empiece con lo que estás escribiendo (ej: "zh" busca "zh", "zho", "zhong", etc.)
         for (let key in pinyinDict) {
             if (key.startsWith(input)) {
                 matches = matches.concat(pinyinDict[key]);
             }
         }
+
+        // Eliminar duplicados para que la lista sea limpia
         matches = [...new Set(matches)];
 
+        // Si no encuentra coincidencia exacta por prefijo, muestra sugerencias generales o avisa
+        if (matches.length === 0) {
+            candidatesContainer.innerHTML = '<span style="font-size:12px; color:#aaa; padding:5px;">Nenhum caractere encontrado para este Pinyin.</span>';
+            return;
+        }
+
+        // Renderiza cada candidato Hanzi en pantalla
         matches.forEach(char => {
             const item = document.createElement('span');
             item.className = 'candidate-item';
@@ -281,7 +342,7 @@
 
     function selectHanzi(char) {
         const notes = document.getElementById('shared-notes');
-        // Inserta cada Hanzi seleccionado uno debajo del otro (verticalmente)
+        // Inserta cada Hanzi seleccionado uno debajo del otro verticalmente
         if (notes.value.trim() === "") {
             notes.value = char;
         } else {
