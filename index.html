@@ -68,24 +68,24 @@
         .phrase-row { font-size: 22px; line-height: 1.3; letter-spacing: 1px; }
         .local { color: #ffffff; }
         .remote { color: var(--mirror); border-left: 3px solid var(--mirror); padding-left: 8px; }
-        .interim-text { color: #888888; font-style: italic; }
 
         /* Conversor Pinyin para Hanzi */
         .pinyin-input-box {
             width: 100%; padding: 8px; background: rgba(0,0,0,0.4); border: 1px solid #444;
             color: var(--accent-yellow); font-size: 14px; border-radius: 4px; outline: none; margin-bottom: 8px; box-sizing: border-box;
         }
-        .hanzi-candidates { display: flex; flex-wrap: wrap; gap: 6px; overflow-y: auto; flex-grow: 1; }
+        .hanzi-candidates { display: flex; flex-wrap: wrap; gap: 6px; overflow-y: auto; flex-grow: 1; max-height: 100px; }
         .candidate-item {
             background: rgba(255, 241, 118, 0.1); border: 1px solid #555; color: #fff;
             padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 18px; transition: 0.2s;
         }
         .candidate-item:hover { background: var(--accent-yellow); color: #000; }
 
-        /* Bloco de Notas Sincronizado */
+        /* Bloco de Notas Sincronizado (Empilhado verticalmente) */
         #shared-notes {
             width: 100%; height: 100%; background: transparent; border: none;
-            color: #fff; font-size: 16px; line-height: 1.4; resize: none; outline: none;
+            color: #fff; font-size: 20px; line-height: 1.6; resize: none; outline: none;
+            white-space: pre-wrap;
         }
     </style>
 </head>
@@ -123,7 +123,7 @@
         <!-- Coluna 3: Bloco de Notas Espelhado / Compartilhado -->
         <div class="panel-box">
             <div class="panel-header">Anotações Compartilhadas</div>
-            <textarea id="shared-notes" placeholder="As anotações escritas aqui aparecem em tempo real para todos na sala..." oninput="syncNotes()"></textarea>
+            <textarea id="shared-notes" placeholder="As anotações aparecem abaixo umas das outras..." oninput="syncNotes()"></textarea>
         </div>
     </div>
 </div>
@@ -138,7 +138,6 @@
         const payload = { text, type, sender: myID, timestamp: Date.now(), extra };
         try {
             await fetch(DB_URL, { method: 'PATCH', body: JSON.stringify({ "lastEvent": payload }) });
-            render(payload, false);
         } catch (e) {}
     }
 
@@ -207,6 +206,13 @@
             for (let i = e.resultIndex; i < e.results.length; ++i) {
                 if (e.results[i].isFinal) {
                     const text = e.results[i][0].transcript.trim();
+                    const row = document.createElement('div');
+                    row.className = 'phrase-row local';
+                    row.innerText = text;
+                    scrollArea.appendChild(row);
+                    scrollArea.scrollTop = scrollArea.scrollHeight;
+                    const initMsg = document.getElementById('init-msg');
+                    if (initMsg) initMsg.style.display = 'none';
                     sync(text, 'phrase');
                 }
             }
@@ -227,38 +233,56 @@
         }
     });
 
-    // Dicionário Básico de Pinyin para Hanzi
+    // Dicionário Ampliado de Pinyin para Hanzi (sem falhas de limpeza)
     const pinyinDict = {
         "nihao": ["你好"], "laoshi": ["老师"], "xiexie": ["谢谢"], "zaijian": ["再见"],
         "zhongguo": ["中国"], "meiguo": ["美国"], "hanyu": ["汉语"], "putonghua": ["普通话"],
-        "wo": ["我"], "ni": ["你"], "ta": ["他", "她", "它"], "men": ["们"],
-        "shi": ["是", "事", "十", "时"], "bu": ["不"], "hao": ["好"], "ren": ["人"],
-        "duoshao": ["多少"], "qian": ["钱"], "shuijiao": ["睡觉", "水饺"], "chifan": ["吃饭"]
+        "wo": ["我"], "ni": ["你"], "ta": ["他", "她"], "men": ["们"],
+        "shi": ["是", "十", "时"], "bu": ["不"], "hao": ["好"], "ren": ["人"],
+        "duoshao": ["多少"], "qian": ["钱"], "shuijiao": ["睡觉", "水饺"], "chifan": ["吃饭"],
+        "xuesheng": ["学生"], "xuexiao": ["学校"], "nihao": ["你好"], "pengyou": ["朋友"],
+        "ma": ["吗"], "ne": ["呢"], "le": ["了"], "de": ["的"]
     };
 
     function convertPinyin() {
-        const input = document.getElementById('pinyinInput').value.toLowerCase().trim();
+        const input = document.getElementById('pinyinInput').value.toLowerCase().replace(/[\s\d]/g, '').trim();
         const candidatesContainer = document.getElementById('candidates');
         candidatesContainer.innerHTML = '';
 
-        if (pinyinDict[input]) {
-            pinyinDict[input].forEach(char => {
-                const item = document.createElement('span');
-                item.className = 'candidate-item';
-                item.innerText = char;
-                item.onclick = () => selectHanzi(char);
-                candidatesContainer.appendChild(item);
-            });
+        if (!input) return;
+
+        // Búsqueda directa o por coincidencia parcial en el diccionario
+        let matches = [];
+        for (let key in pinyinDict) {
+            if (key.startsWith(input)) {
+                matches = matches.concat(pinyinDict[key]);
+            }
         }
+
+        // Eliminar duplicados
+        matches = [...new Set(matches)];
+
+        matches.forEach(char => {
+            const item = document.createElement('span');
+            item.className = 'candidate-item';
+            item.innerText = char;
+            item.onclick = () => selectHanzi(char);
+            candidatesContainer.appendChild(item);
+        });
     }
 
     function selectHanzi(char) {
-        sync(char, 'phrase');
         const notes = document.getElementById('shared-notes');
-        notes.value += char;
+        // Agrega el nuevo Hanzi con un salto de línea hacia abajo
+        if (notes.value.trim() === "") {
+            notes.value = char;
+        } else {
+            notes.value += "\n" + char;
+        }
         syncNotes();
         document.getElementById('pinyinInput').value = '';
         document.getElementById('candidates').innerHTML = '';
+        document.getElementById('pinyinInput').focus();
     }
 
     function syncNotes() {
