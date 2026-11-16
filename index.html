@@ -77,7 +77,7 @@
         .local { color: #ffffff; }
         .remote { color: var(--mirror); border-left: 3px solid var(--mirror); padding-left: 8px; }
 
-        /* Conversor Pinyin para Hanzi vía API */
+        /* Conversor Pinyin para Hanzi */
         .pinyin-input-box {
             width: 100%; padding: 8px; background: rgba(0,0,0,0.4); border: 1px solid #444;
             color: var(--accent-yellow); font-size: 14px; border-radius: 4px; outline: none; margin-bottom: 8px; box-sizing: border-box;
@@ -122,10 +122,10 @@
             </div>
         </div>
 
-        <!-- Coluna 2: Conversor Pinyin -> Hanzi vía API Externa -->
+        <!-- Coluna 2: Conversor Pinyin -> Hanzi -->
         <div class="panel-box">
-            <div class="panel-header">Teclado Pinyin (API)</div>
-            <input type="text" id="pinyinInput" class="pinyin-input-box" placeholder="Digite Pinyin (ex: zhongguo, nihao)..." oninput="searchPinyinAPI()">
+            <div class="panel-header">Teclado Pinyin (Hanzi)</div>
+            <input type="text" id="pinyinInput" class="pinyin-input-box" placeholder="Digite Pinyin (ex: nihao, zh...)" oninput="convertPinyin()">
             <div id="candidates" class="hanzi-candidates"></div>
         </div>
 
@@ -245,66 +245,103 @@
         }
     });
 
-    // Consulta en tiempo real a la API de CC-CEDICT / Wikcionario de Chino
-    let searchTimeout = null;
-    async function searchPinyinAPI() {
-        const query = document.getElementById('pinyinInput').value.toLowerCase().replace(/[\s\d]/g, '').trim();
+    // Dicionário Ampliado de Pinyin (Soporta búsqueda por prefijos completos tipo 'zh', 'ni', 'zhong', etc.)
+    const pinyinDict = {
+        "n": ["你", "呢", "那", "哪", "您", "男", "南", "难", "脑", "鸟", "牛", "农", "努力"],
+        "ni": ["你", "您", "泥", "拟", "逆", "腻"],
+        "nih": ["你好"],
+        "nihao": ["你好"],
+        "l": ["老师", "零", "两", "来", "乐", "冷", "里", "力", "理", "历史", "旅游", "绿", "路", "律师"],
+        "lao": ["老", "劳", "姥", "烙"],
+        "laos": ["老师"],
+        "laoshi": ["老师"],
+        "xie": ["谢", "写", "些", "鞋", "血", "斜", "谐"],
+        "xiexie": ["谢谢"],
+        "zai": ["在", "再", "载", "灾"],
+        "zaijian": ["再见"],
+        "zh": ["中", "这", "只", "知道", "中国", "者", "主", "站", "长", "找", "真", "正", "重", "纸", "桌", "字", "组", "作", "zuo"],
+        "zho": ["中", "中国", "周", "重要", "钟", "种", "周末"],
+        "zhong": ["中", "中国", "钟", "种", "重", "终", "中央"],
+        "zhongg": ["中国"],
+        "zhongguo": ["中国"],
+        "m": ["我", "门", "吗", "美", "妈", "买", "慢", "猫", "帽", "米", "面包", "明天", "名字"],
+        "me": ["美", "们", "么", "梅", "煤"],
+        "mei": ["美", "没", "每", "妹", "煤", "魅"],
+        "meiguo": ["美国"],
+        "h": ["好", "汉", "话", "很", "和", "会", "后", "海", "黑", "红", "花", "画", "欢迎", "汉语", "韩国"],
+        "ha": ["哈", "孩", "海", "还"],
+        "hao": ["好", "号"],
+        "han": ["汉", "汗", "寒", "韩"],
+        "hanyu": ["汉语"],
+        "p": ["普通话", "朋", "票", "片", "旁", "跑步", "苹果", "漂亮", "朋友"],
+        "pu": ["普通", "瀑布"],
+        "putong": ["普通"],
+        "putonghua": ["普通话"],
+        "peng": ["朋", "碰", "棚"],
+        "pengyou": ["朋友"],
+        "w": ["我", "问", "晚", "外", "完", "万", "网", "王", "位", "问", "午", "物"],
+        "wo": ["我", "卧室"],
+        "s": ["是", "十", "时", "水", "说", "书", "生", "学校", "学生", "睡觉", "岁", "商店", "身体", "书法", "说话"],
+        "sh": ["是", "十", "时", "说", "书", "学生", "学校", "睡觉", "水", "谁", "什么", "时候", "商店", "身体"],
+        "shi": ["是", "十", "时", "事", "室", "识", "市", "试", "视", "石", "食"],
+        "x": ["学", "谢", "想", "下", "笑", "西", "心", "学生", "学校", "喜", "洗", "香", "鞋", "熊", "修", "休", "需要"],
+        "xu": ["学", "许", "需", "虚", "续"],
+        "xue": ["学", "雪", "穴"],
+        "xuesheng": ["学生"],
+        "xuexiao": ["学校"],
+        "b": ["不", "爸", "杯", "笔", "北", "本", "病", "包", "饱", "报", "杯子", "北京", "便宜", "机票", "冰", "冰箱"],
+        "bu": ["不", "步", "部", "布"],
+        "t": ["他", "她", "它", "听", "同", "太", "疼", "天气", "跳舞", "踢", "体", "题", "图", "推"],
+        "ta": ["他", "她", "它", "踏"],
+        "r": ["人", "日", "肉", "热", "认", "然", "日本", "认识"],
+        "ren": ["人", "认", "任", "认真"],
+        "d": ["多", "大", "电", "店", "点", "读", "懂", "弟弟", "地图", "地方", "电脑", "电视", "电影", "东西", "动物"],
+        "du": ["多", "读", "度", "都", "肚子"],
+        "duo": ["多", "朵", "多少"],
+        "duoshao": ["多少"],
+        "q": ["钱", "请", "去", "前", "起", "汽", "汽车", "铅笔", "晴", "秋", "裙子"],
+        "qian": ["钱", "前", "千", "铅笔"],
+        "ch": ["吃", "车", "出", "长", "常", "场", "穿", "船", "衬衫", "唱歌", "超市", "出租车"],
+        "chi": ["吃", "迟", "翅膀"],
+        "chifan": ["吃饭"]
+    };
+
+    function convertPinyin() {
+        const input = document.getElementById('pinyinInput').value.toLowerCase().replace(/[\s\d]/g, '').trim();
         const candidatesContainer = document.getElementById('candidates');
         candidatesContainer.innerHTML = '';
 
-        if (!query) return;
+        if (!input) return;
 
-        candidatesContainer.innerHTML = '<span class="loading-text">Buscando...</span>';
+        let matches = [];
 
-        // Evitar múltiples peticiones seguidas muy rápidas (debounce)
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(async () => {
-            try {
-                // Petición a la base de datos abierta de Wikcionario en formato JSON lines
-                const response = await fetch(`https://kaikki.org/dictionary/Chinese/by-pinyin/${encodeURIComponent(query)}.json`);
-                
-                if (!response.ok) {
-                    throw new Error("No encontrado");
-                }
-
-                const textData = await response.text();
-                const lines = textData.trim().split('\n');
-                let foundChars = new Set();
-
-                for (let line of lines) {
-                    try {
-                        const obj = JSON.parse(line);
-                        if (obj.word) {
-                            foundChars.add(obj.word);
-                        }
-                    } catch (err) {}
-                }
-
-                candidatesContainer.innerHTML = '';
-
-                if (foundChars.size === 0) {
-                    candidatesContainer.innerHTML = '<span class="loading-text">Nenhum resultado.</span>';
-                    return;
-                }
-
-                // Renderizar cada Hanzi obtenido de la API
-                foundChars.forEach(char => {
-                    const item = document.createElement('span');
-                    item.className = 'candidate-item';
-                    item.innerText = char;
-                    item.onclick = () => selectHanzi(char);
-                    candidatesContainer.appendChild(item);
-                });
-
-            } catch (error) {
-                candidatesContainer.innerHTML = '<span class="loading-text">Erro na busca da API.</span>';
+        // Busca todas las entradas cuyo pinyin empiece con el prefijo ingresado (ej: "zh", "ni", etc.)
+        for (let key in pinyinDict) {
+            if (key.startsWith(input)) {
+                matches = matches.concat(pinyinDict[key]);
             }
-        }, 300);
+        }
+
+        // Elimina duplicados para mantener la limpieza visual
+        matches = [...new Set(matches)];
+
+        if (matches.length === 0) {
+            candidatesContainer.innerHTML = '<span class="loading-text">Nenhum caractere encontrado.</span>';
+            return;
+        }
+
+        matches.forEach(char => {
+            const item = document.createElement('span');
+            item.className = 'candidate-item';
+            item.innerText = char;
+            item.onclick = () => selectHanzi(char);
+            candidatesContainer.appendChild(item);
+        });
     }
 
     function selectHanzi(char) {
         const notes = document.getElementById('shared-notes');
-        // Inserta cada Hanzi seleccionado uno debajo del otro verticalmente
+        // Inserta cada Hanzi seleccionado uno debajo del otro (verticalmente)
         if (notes.value.trim() === "") {
             notes.value = char;
         } else {
